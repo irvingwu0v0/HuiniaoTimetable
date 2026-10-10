@@ -5,6 +5,7 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%2010%2B-brightgreen.svg)](https://developer.android.com/)
 [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![Design](https://img.shields.io/badge/Design-Material%20You%20(M3)-purple.svg)](https://m3.material.io/)
+[![Build & Release](https://github.com/irvingwu0v0/HuiniaoTimetable/actions/workflows/release.yml/badge.svg)](https://github.com/irvingwu0v0/HuiniaoTimetable/actions/workflows/release.yml)
 
 ---
 
@@ -75,6 +76,11 @@ export JAVA_HOME=/opt/android-studio/jbr
 ```
 
 产出 APK 文件位于：`app/build/outputs/apk/debug/app-debug.apk`。
+
+### 自动化构建发布 (GitHub Actions CI/CD)
+本项目已配置 GitHub Actions 自动化流水线 (`.github/workflows/release.yml`)。每次推送（`push`）至 `main` 分支时，将自动执行编译、测试、签名打包并创建 GitHub Release 发布：
+- **安装包命名规范**：`Huiniao_1.X_XXXXXX(commit号)_(时间).apk`（例如：`Huiniao_1.1_d3b81cd_20261010_165030.apk`）
+- **发布页面**：前往 [Releases 页面](https://github.com/irvingwu0v0/HuiniaoTimetable/releases) 即可直接下载各版本最新签名的 APK。
 
 ---
 

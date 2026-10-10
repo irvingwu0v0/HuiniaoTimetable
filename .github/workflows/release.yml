@@ -1,0 +1,111 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || yes | sdkmanager --licenses 2>/dev/null || true
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare APK Asset & Metadata
+        id: meta
+        run: |
+          # 1. 提取版本号 (1.X，如 1.1)
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.1")
+
+          # 2. 获取短提交号 (commit 号)
+          COMMIT_SHORT=$(git rev-parse --short HEAD)
+
+          # 3. 获取北京时间 (YYYYMMDD_HHmmss)
+          BUILD_TIME=$(TZ='Asia/Shanghai' date +'%Y%m%d_%H%M%S')
+          TIME_HUMAN=$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')
+
+          # 4. 生成符合需求规范的文件名: Huiniao_1.X_XXXXXX(commit号)_(时间).apk
+          APK_NAME="Huiniao_${VERSION_NAME}_${COMMIT_SHORT}_${BUILD_TIME}.apk"
+
+          # 5. 查找并准备生成的 Release APK
+          SOURCE_APK=$(find app/build/outputs/apk/release -type f -name "*.apk" ! -name "*-unsigned.apk" | head -n 1)
+          if [ -z "$SOURCE_APK" ]; then
+            SOURCE_APK=$(find app/build/outputs/apk/release -type f -name "*.apk" | head -n 1)
+          fi
+
+          if [ -z "$SOURCE_APK" ] || [ ! -f "$SOURCE_APK" ]; then
+            echo "Error: Release APK not found in app/build/outputs/apk/release!"
+            exit 1
+          fi
+
+          mkdir -p build_release
+          cp "$SOURCE_APK" "build_release/${APK_NAME}"
+          echo "Target APK generated: build_release/${APK_NAME}"
+
+          # 6. 生成发布 Tag 与 Release 标题
+          RELEASE_TAG="v${VERSION_NAME}-${COMMIT_SHORT}-${BUILD_TIME}"
+          RELEASE_TITLE="灰鸟课表 v${VERSION_NAME} (${COMMIT_SHORT})"
+
+          echo "apk_path=build_release/${APK_NAME}" >> $GITHUB_OUTPUT
+          echo "apk_name=${APK_NAME}" >> $GITHUB_OUTPUT
+          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "release_title=${RELEASE_TITLE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION_NAME}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT_SHORT}" >> $GITHUB_OUTPUT
+          echo "time=${TIME_HUMAN}" >> $GITHUB_OUTPUT
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.apk_name }}
+          path: ${{ steps.meta.outputs.apk_path }}
+          if-no-files-found: error
+
+      - name: Publish Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ steps.meta.outputs.release_title }}
+          body: |
+            ### 灰鸟课表 (HuiniaoTimetable) 自动构建发布
+            - **应用版本**：v${{ steps.meta.outputs.version }}
+            - **提交哈希**：[`${{ steps.meta.outputs.commit }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+            - **构建时间**：${{ steps.meta.outputs.time }} (CST)
+            - **安装包文件**：`${{ steps.meta.outputs.apk_name }}`
+
+            > 每次 push 到 main 分支由 GitHub Actions 自动编译构建、签名打包并发布。
+          files: ${{ steps.meta.outputs.apk_path }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
