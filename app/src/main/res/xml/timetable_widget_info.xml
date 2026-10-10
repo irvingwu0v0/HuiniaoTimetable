@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  「今日课表」控件描述。
+  resizeMode 允许横竖自由缩放；minResizeWidth/Height 给出最小可用尺寸；
+  targetCellWidth/Height 是 Android 12+ 的默认占位（4x2）。
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/widget_timetable"
+    android:minHeight="110dp"
+    android:minResizeHeight="60dp"
+    android:minResizeWidth="140dp"
+    android:minWidth="250dp"
+    android:previewLayout="@layout/widget_timetable_preview"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

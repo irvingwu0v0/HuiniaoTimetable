@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">灰鸟课表</string>
+    <string name="widget_title">今日课表</string>
+    <string name="widget_description">今日课程一览：上课时间、课程名与教室，随每节课进度自动着色</string>
+</resources>

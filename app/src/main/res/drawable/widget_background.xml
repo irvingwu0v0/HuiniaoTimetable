@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 桌面控件圆角卡片背景，圆角半径取系统 Material You 控件规范值。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_background" />
+    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
+</shape>
