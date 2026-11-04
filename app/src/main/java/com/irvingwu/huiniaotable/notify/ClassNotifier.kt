@@ -41,6 +41,9 @@ object ClassNotifier {
     /** 课前提醒提前量（分钟）。 */
     const val LEAD_MINUTES = 15
 
+    /** 上课期间更新进度通知的间隔（分钟）。 */
+    private const val LIVE_UPDATE_INTERVAL_MINUTES = 1L
+
     const val ACTION_REFRESH = "com.irvingwu.huiniaotable.notify.REFRESH"
 
     private const val CHANNEL_REMINDER = "class_reminder"
@@ -134,10 +137,10 @@ object ClassNotifier {
             val upcoming = occurrences.firstOrNull {
                 it.start.isAfter(now) && !it.start.isAfter(now.plusMinutes(LEAD_MINUTES.toLong()))
             }
+            val prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
             // 课前 15 分钟提醒（每节课只提醒一次）
             if (upcoming != null) {
-                val prefs = app.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 val startEpoch = epochMillis(upcoming.start)
                 if (prefs.getLong(KEY_LAST_REMINDED, 0L) != startEpoch) {
                     postReminder(app, upcoming, ChronoUnit.MINUTES.between(now, upcoming.start))
@@ -147,12 +150,19 @@ object ClassNotifier {
 
             // 上课中的实时进度通知
             if (current != null) {
+                // 课程已经开始，撤回上一节课的课前提醒，避免通知栏残留过期提醒。
+                // 连续上课时可能刚推过下一节课的提醒，因此只撤回当前课程对应的那条提醒。
+                if (prefs.getLong(KEY_LAST_REMINDED, 0L) == epochMillis(current.start)) {
+                    manager.cancel(REMINDER_NOTIFICATION_ID)
+                }
                 postLiveUpdate(app, current, progressPercent(current, now))
             } else {
                 manager.cancel(LIVE_NOTIFICATION_ID)
+                // 当前没有待提醒的课程时，旧提醒也已失效。
+                if (upcoming == null) manager.cancel(REMINDER_NOTIFICATION_ID)
             }
 
-            scheduleNextRefresh(app, occurrences, now)
+            scheduleNextRefresh(app, occurrences, current, now)
         } catch (t: Throwable) {
             // 防御性捕获，避免任何后台状态调度异常导致应用崩溃
         }
@@ -360,10 +370,15 @@ object ClassNotifier {
         return (elapsed * 100 / total).toInt().coerceIn(0, 100)
     }
 
-    /** 按今日的上课 / 下课 / 课前 15 分钟时刻安排下一次唤醒；当天没有课时退回明天零点。 */
+    /**
+     * 按今日的上课 / 下课 / 课前 15 分钟时刻安排下一次唤醒；上课期间额外每分钟唤醒一次，
+     * 以便 Live Updates 的进度条和状态栏胶囊即使在后台或其他界面也能持续更新。
+     * 当天没有更多时间点时退回明天零点。
+     */
     private fun scheduleNextRefresh(
         context: Context,
         occurrences: List<Occurrence>,
+        current: Occurrence?,
         now: LocalDateTime,
     ) {
         val boundaries = ArrayList<LocalDateTime>(occurrences.size * 3)
@@ -373,7 +388,13 @@ object ClassNotifier {
             boundaries += it.end
         }
         val fallback = LocalDate.now().plusDays(1).atStartOfDay()
-        val next = boundaries.filter { it.isAfter(now) }.minOrNull() ?: fallback
+        val nextBoundary = boundaries.filter { it.isAfter(now) }.minOrNull()
+        val nextTick = current?.let {
+            val tick = now.truncatedTo(ChronoUnit.MINUTES)
+                .plusMinutes(LIVE_UPDATE_INTERVAL_MINUTES)
+            tick.takeIf { time -> time.isAfter(now) && time.isBefore(it.end) }
+        }
+        val next = listOfNotNull(nextBoundary, nextTick).minOrNull() ?: fallback
         val triggerAt = maxOf(next, now.plusSeconds(30))
             .atZone(ZoneId.systemDefault())
             .toInstant()
