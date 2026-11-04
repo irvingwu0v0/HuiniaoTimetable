@@ -71,10 +71,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.irvingwu.huiniaotable.R
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Campus
 import com.irvingwu.huiniaotable.data.CampusBuilding
@@ -123,7 +125,7 @@ fun SettingsContent(
     val context = LocalContext.current
     val versionName = remember {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
-            .getOrNull() ?: "1.1"
+            .getOrNull() ?: "1.2"
     }
 
     var showTermDialog by remember { mutableStateOf(false) }
@@ -135,7 +137,7 @@ fun SettingsContent(
     if (showTermDialog) {
         SingleChoiceDialog(
             icon = Icons.Outlined.School,
-            title = "选择生效学期",
+            title = t("选择生效学期", "Select semester"),
             items = state.terms,
             selectedItem = state.terms.firstOrNull { it.value == state.term },
             itemTitle = { it.label },
@@ -147,7 +149,7 @@ fun SettingsContent(
     // 开学首周日期选择器
     if (showStartPicker) {
         PickDateDialog(
-            title = "选取开学首周周一日期",
+            title = t("选取开学首周周一日期", "Select the first Monday of term"),
             current = state.termStart,
             onDismiss = { showStartPicker = false },
             onConfirm = {
@@ -164,7 +166,7 @@ fun SettingsContent(
             onDismissRequest = { showJwxtDialog = false },
             title = {
                 Text(
-                    text = "配置教务系统网址",
+                    text = t("配置教务系统网址", "Academic system URL"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -172,14 +174,14 @@ fun SettingsContent(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "输入您所在高校的强智教务系统入口网址：",
+                        text = t("输入您所在高校的强智教务系统入口网址：", "Enter your university's academic system URL:"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = urlInput,
                         onValueChange = { urlInput = it },
-                        label = { Text("教务系统网址 (URL)") },
+                        label = { Text(t("教务系统网址 (URL)", "Academic system URL")) },
                         placeholder = { Text("https://jwxt.XXXX.edu.cn/") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -193,11 +195,11 @@ fun SettingsContent(
                         showJwxtDialog = false
                     },
                 ) {
-                    Text("保存")
+                    Text(t("保存", "Save"))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showJwxtDialog = false }) { Text("取消") }
+                TextButton(onClick = { showJwxtDialog = false }) { Text(t("取消", "Cancel")) }
             },
         )
     }
@@ -214,14 +216,14 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.AccountCircle,
-                    title = "统一认证学号",
-                    subtitle = state.studentId.ifBlank { "未建立有效教务会话" },
+                    title = t("统一认证学号", "Student ID"),
+                    subtitle = state.studentId.ifBlank { t("未建立有效教务会话", "No active academic session") },
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 SettingRow(
                     icon = Icons.Outlined.Language,
-                    title = "教务系统网址",
-                    subtitle = state.jwxtBaseUrl.ifBlank { "未配置教务系统网址" },
+                    title = t("教务系统网址", "Academic system URL"),
+                    subtitle = state.jwxtBaseUrl.ifBlank { t("未配置教务系统网址", "Academic system URL not configured") },
                     onClick = { showJwxtDialog = true },
                     trailing = {
                         Icon(
@@ -236,8 +238,8 @@ fun SettingsContent(
                 if (!state.loggedIn) {
                     SettingRow(
                         icon = Icons.Outlined.LockReset,
-                        title = "凭据鉴权已失效",
-                        subtitle = "当前展示离线课表，请重新登录鉴权",
+                        title = t("凭据鉴权已失效", "Sign-in expired"),
+                        subtitle = t("当前展示离线课表，请重新登录鉴权", "Showing the offline timetable. Sign in again."),
                         onClick = onLogin,
                     )
                     FilledTonalButton(
@@ -246,7 +248,7 @@ fun SettingsContent(
                             .fillMaxWidth()
                             .padding(top = 4.dp),
                     ) {
-                        Text("重新登入教务系统")
+                        Text(t("重新登入教务系统", "Sign in again"))
                     }
                 }
                 OutlinedButton(
@@ -262,7 +264,7 @@ fun SettingsContent(
                         tint = MaterialTheme.colorScheme.error,
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("退出当前账户并清除本地凭据", color = MaterialTheme.colorScheme.error)
+                    Text(t("退出当前账户并清除本地凭据", "Sign out and clear local credentials"), color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -272,8 +274,8 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.School,
-                    title = "当前生效学期",
-                    subtitle = state.term.ifBlank { "教务系统缺省当前学期" },
+                    title = t("当前生效学期", "Active semester"),
+                    subtitle = state.term.ifBlank { t("教务系统缺省当前学期", "Academic system default") },
                     onClick = if (state.terms.size > 1) { { showTermDialog = true } } else null,
                     trailing = if (state.terms.size > 1) {
                         {
@@ -287,7 +289,7 @@ fun SettingsContent(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 ) {
                                     Text(
-                                        text = "切换",
+                                        text = t("切换", "Change"),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                     )
@@ -307,10 +309,13 @@ fun SettingsContent(
 
                 SettingRow(
                     icon = Icons.Outlined.CalendarMonth,
-                    title = "学期开学首周基准日",
+                    title = t("学期开学首周基准日", "Term start date"),
                     subtitle = state.termStart?.let {
-                        "首周：${it.format(dateFormatter)} · 第 ${state.currentWeek} 教学周"
-                    } ?: "未设定基准日期",
+                        t(
+                            "首周：${it.format(dateFormatter)} · 第 ${state.currentWeek} 教学周",
+                            "First week: ${it.format(dateFormatter)} · Week ${state.currentWeek}",
+                        )
+                    } ?: t("未设定基准日期", "Start date not set"),
                     onClick = { showStartPicker = true },
                     trailing = {
                         Icon(
@@ -326,7 +331,7 @@ fun SettingsContent(
 
                 SettingRow(
                     icon = Icons.Outlined.Sync,
-                    title = "课表最近同步时间",
+                    title = t("课表最近同步时间", "Last timetable sync"),
                     subtitle = formatTime(state.fetchedAt),
                 )
                 FilledTonalButton(
@@ -342,7 +347,13 @@ fun SettingsContent(
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text(if (state.refreshing) "正在同步教务系统…" else "立即执行远程数据同步")
+                    Text(
+                        if (state.refreshing) {
+                            t("正在同步教务系统…", "Syncing academic system…")
+                        } else {
+                            t("立即执行远程数据同步", "Sync now")
+                        },
+                    )
                 }
             }
         }
@@ -352,7 +363,7 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.Schedule,
-                    title = "作息方案与校区楼宇设置",
+                    title = t("作息方案与校区楼宇设置", "Schedules, campuses and buildings"),
                     subtitle = "${state.scheduleConfigName} · ${state.campus.label} · ${state.timeTable.label}",
                     onClick = onOpenClassTimes,
                     trailing = {
@@ -372,11 +383,11 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.HolidayVillage,
-                    title = "节假日与调休编排",
+                    title = t("节假日与调休编排", "Holidays and makeup days"),
                     subtitle = when (state.weekendMode) {
-                        WeekendMode.Auto -> "周末智能判定"
-                        WeekendMode.Always -> "周末完整周期"
-                        WeekendMode.Hide -> "仅展示工作日"
+                        WeekendMode.Auto -> t("周末智能判定", "Smart weekend display")
+                        WeekendMode.Always -> t("周末完整周期", "Show full week")
+                        WeekendMode.Hide -> t("仅展示工作日", "Weekdays only")
                     } + if (state.holidayRegion != HolidayRegion.NONE) " · ${state.holidayRegion.displayName}" else "",
                     onClick = onOpenHolidays,
                     trailing = {
@@ -396,8 +407,12 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.Nightlight,
-                    title = "隐藏晚自习（最后两节）",
-                    subtitle = if (state.hideEvening) "课表已隐藏最后两节时段" else "课表完整显示全部节次",
+                    title = t("隐藏晚自习（最后两节）", "Hide evening classes (last two periods)"),
+                    subtitle = if (state.hideEvening) {
+                        t("课表已隐藏最后两节时段", "The last two periods are hidden")
+                    } else {
+                        t("课表完整显示全部节次", "All periods are shown")
+                    },
                     trailing = {
                         Switch(
                             checked = state.hideEvening,
@@ -413,8 +428,8 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.NotificationsActive,
-                    title = "上课实时通知（Live Updates）",
-                    subtitle = "课前 15 分钟提醒与上课常驻进度",
+                    title = t("上课实时通知（Live Updates）", "Live class updates"),
+                    subtitle = t("课前 15 分钟提醒与上课常驻进度", "15-minute reminders and live class progress"),
                     trailing = {
                         Switch(
                             checked = state.classNotify,
@@ -427,8 +442,8 @@ fun SettingsContent(
 
                 SettingRow(
                     icon = Icons.Outlined.EditCalendar,
-                    title = "一键写入系统日程",
-                    subtitle = "将当前学期全部排课写入手机系统日历",
+                    title = t("一键写入系统日程", "Add all classes to calendar"),
+                    subtitle = t("将当前学期全部排课写入手机系统日历", "Write this semester's classes to the system calendar"),
                     onClick = onSyncCalendar,
                     trailing = {
                         Icon(
@@ -447,8 +462,12 @@ fun SettingsContent(
             SettingsCard {
                 SettingRow(
                     icon = Icons.Outlined.Palette,
-                    title = "Material You 动态色彩体系",
-                    subtitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "跟随系统壁纸基色自动变色" else "低于 Android 12，采用默认基准色",
+                    title = t("Material You 动态色彩体系", "Material You dynamic colour"),
+                    subtitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        t("跟随系统壁纸基色自动变色", "Colours follow the system wallpaper")
+                    } else {
+                        t("低于 Android 12，采用默认基准色", "Android 12+ is required; using the default palette")
+                    },
                     trailing = {
                         Switch(
                             checked = state.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
@@ -484,12 +503,19 @@ fun SettingsContent(
                                 when {
                                     remaining <= 0 -> {
                                         logoTaps = 0
-                                        Toast.makeText(context, "已进入开发者调试模式", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            t("已进入开发者调试模式", "Developer mode enabled"),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
                                         onOpenDebug()
                                     }
                                     remaining <= 5 -> Toast.makeText(
                                         context,
-                                        "再点击 $remaining 次进入开发者调试模式",
+                                        t(
+                                            "再点击 $remaining 次进入开发者调试模式",
+                                            "$remaining more taps to enable developer mode",
+                                        ),
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                 }
@@ -501,7 +527,7 @@ fun SettingsContent(
                         ) {
                             Image(
                                 painter = painterResource(id = R.drawable.ic_app_logo),
-                                contentDescription = "应用图标",
+                                contentDescription = t("应用图标", "App icon"),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Fit,
                             )
@@ -509,12 +535,12 @@ fun SettingsContent(
                     }
                     Column {
                         Text(
-                            text = "灰鸟课表",
+                            text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "版本 $versionName",
+                            text = t("版本 $versionName", "Version $versionName"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -526,8 +552,8 @@ fun SettingsContent(
 
                 SettingRow(
                     icon = Icons.Outlined.Shield,
-                    title = "本地离线沙盒安全保障",
-                    subtitle = "凭据由硬件 KeyStore 加密存储，无云端中转",
+                    title = t("本地离线沙盒安全保障", "Local secure storage"),
+                    subtitle = t("凭据由硬件 KeyStore 加密存储，无云端中转", "Credentials are encrypted with hardware-backed KeyStore"),
                 )
             }
         }
@@ -606,7 +632,7 @@ private fun SettingRow(
 }
 
 private fun formatTime(epochMillis: Long): String {
-    if (epochMillis <= 0L) return "尚未执行同步"
+    if (epochMillis <= 0L) return t("尚未执行同步", "Never synced")
     return Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .format(timeFormatter)

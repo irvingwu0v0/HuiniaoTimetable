@@ -1,6 +1,7 @@
 package com.irvingwu.huiniaotable.data
 
 import android.content.Context
+import com.irvingwu.huiniaotable.t as tr
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +39,7 @@ data class AppState(
     val loggedIn: Boolean = false,
     val studentId: String = "",
     val jwxtBaseUrl: String = Prefs.DEFAULT_JWXT_BASE_URL,
-    val scheduleConfigName: String = "标准高校作息表",
+    val scheduleConfigName: String = tr("标准高校作息表", "Standard University Schedule"),
     val schedule: Schedule? = null,
     val terms: List<KbParser.Term> = emptyList(),
     val term: String = "",
@@ -324,7 +325,8 @@ data class AppState(
         if (holidays?.isMakeupWorkday(date) != true) return null
         val display = displayDayOfWeek(date, week)
         if (display == date.dayOfWeek.value) return null
-        return "补${MakeupGuesser.weekdayLabel(display)}"
+        val day = MakeupGuesser.weekdayLabel(display)
+        return tr("补$day", "Makeup: $day")
     }
 
     /**
@@ -486,7 +488,7 @@ object TimetableRepository {
             if (credentials == null) {
                 // 只有缓存课表、没有登录凭据：保留课表，提示去登录，不要把人踢回登录页。
                 _state.update { it.copy(refreshing = false) }
-                pushMessage("登录已失效，请重新登录后再刷新")
+                pushMessage(tr("登录已失效，请重新登录后再刷新", "Session expired. Sign in again before refreshing."))
                 return
             }
             _state.update { it.copy(refreshing = true) }
@@ -495,7 +497,7 @@ object TimetableRepository {
             try {
                 val client = JwxtClient(baseUrl = _state.value.jwxtBaseUrl)
                 when (val login = client.login(credentials.first, credentials.second)) {
-                    is LoginResult.Failure -> pushMessage("刷新失败：${login.message}")
+                    is LoginResult.Failure -> pushMessage(tr("刷新失败：${login.message}", "Refresh failed: ${login.message}"))
 
                     LoginResult.Success -> {
                         val parsed = client.fetchSchedule(prefs.term)
@@ -518,12 +520,12 @@ object TimetableRepository {
                             )
                         }
                         recomputeWeeks()
-                        if (manual) pushMessage("课表已更新")
+                        if (manual) pushMessage(tr("课表已更新", "Timetable updated"))
                         finished = true
                     }
                 }
             } catch (t: Throwable) {
-                pushMessage("刷新失败：${friendlyError(t)}")
+                pushMessage(tr("刷新失败：${friendlyError(t)}", "Refresh failed: ${friendlyError(t)}"))
             } finally {
                 if (!finished) _state.update { it.copy(refreshing = false) }
             }
@@ -550,7 +552,9 @@ object TimetableRepository {
                 prefs.holidayFetchedAt = data.fetchedAt
                 _state.update { it.copy(holidayFetchedAt = data.fetchedAt) }
                 reloadHolidays()
-                if (!silent) pushMessage("节假日数据已更新（${data.source}）")
+                if (!silent) {
+                    pushMessage(tr("节假日数据已更新（${data.source}）", "Holiday data updated (${data.source})"))
+                }
             } catch (t: Throwable) {
                 reloadHolidays()
                 if (!silent) pushMessage(friendlyError(t))
@@ -724,7 +728,7 @@ object TimetableRepository {
                     scheduleConfigName = ClassTimes.configName,
                     campus = Campus.Default,
                     building = ClassTimes.defaultBuilding,
-                    message = "已导入作息表：${ClassTimes.configName}",
+                    message = tr("已导入作息表：${ClassTimes.configName}", "Schedule imported: ${ClassTimes.configName}"),
                     messageSeq = it.messageSeq + 1,
                 )
             }
@@ -742,7 +746,7 @@ object TimetableRepository {
                 campus = Campus.Default,
                 building = ClassTimes.defaultBuilding,
                 lunchBreakSlotOverride = 0,
-                message = "已恢复标准作息",
+                message = tr("已恢复标准作息", "Standard schedule restored"),
                 messageSeq = it.messageSeq + 1,
             )
         }
@@ -753,7 +757,7 @@ object TimetableRepository {
         prefs.scheduleConfigJson = ClassTimes.exportJson()
         _state.update {
             it.copy(
-                message = "已更新节次时间",
+                message = tr("已更新节次时间", "Period times updated"),
                 messageSeq = it.messageSeq + 1,
             )
         }
@@ -773,7 +777,7 @@ object TimetableRepository {
                 scheduleConfigName = ClassTimes.configName,
                 campus = Campus.Default,
                 building = ClassTimes.defaultBuilding,
-                message = "已保存作息方案：$label",
+                message = tr("已保存作息方案：$label", "Schedule saved: $label"),
                 messageSeq = it.messageSeq + 1,
             )
         }
@@ -787,7 +791,7 @@ object TimetableRepository {
                 scheduleConfigName = ClassTimes.configName,
                 campus = Campus.Default,
                 building = ClassTimes.defaultBuilding,
-                message = "已删除作息方案",
+                message = tr("已删除作息方案", "Schedule deleted"),
                 messageSeq = it.messageSeq + 1,
             )
         }
@@ -971,10 +975,10 @@ object TimetableRepository {
         JSONObject().apply { map.forEach { (key, value) -> put(key, value.name) } }.toString()
 
     private fun friendlyError(t: Throwable): String = when (t) {
-        is SessionExpiredException -> "登录状态已失效，请重新登录"
-        is ParseException -> t.message ?: "解析失败"
-        is UnknownHostException -> "网络不可用，请检查网络连接"
-        is SocketTimeoutException -> "连接超时，请稍后重试"
-        else -> t.message?.takeIf { it.isNotBlank() } ?: "网络异常，请稍后重试"
+        is SessionExpiredException -> tr("登录状态已失效，请重新登录", "Session expired. Please sign in again.")
+        is ParseException -> t.message ?: tr("解析失败", "Parsing failed")
+        is UnknownHostException -> tr("网络不可用，请检查网络连接", "Network unavailable. Check your connection.")
+        is SocketTimeoutException -> tr("连接超时，请稍后重试", "Connection timed out. Try again later.")
+        else -> t.message?.takeIf { it.isNotBlank() } ?: tr("网络异常，请稍后重试", "Network error. Try again later.")
     }
 }

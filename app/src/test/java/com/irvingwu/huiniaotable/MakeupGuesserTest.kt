@@ -7,14 +7,29 @@ import com.irvingwu.huiniaotable.data.MakeupGuesser
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
+import java.util.Locale
 
 /**
  * 调休补课推断：全国数据里只有「哪天放假、哪天上班」，没有「补周几的课」，
  * 这里验证按「补假期里被吞掉的最后一个工作日」推断的结果（用 2026 年真实安排）。
  */
 class MakeupGuesserTest {
+
+    private val defaultLocale = Locale.getDefault()
+
+    @Before
+    fun useChineseLocale() {
+        Locale.setDefault(Locale.CHINA)
+    }
+
+    @After
+    fun restoreLocale() {
+        Locale.setDefault(defaultLocale)
+    }
 
     /** 2026 年真实放假块 + 调休上班日。 */
     private fun holidayMap(): Map<LocalDate, HolidayDay> {

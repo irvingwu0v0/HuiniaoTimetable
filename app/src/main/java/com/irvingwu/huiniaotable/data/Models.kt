@@ -1,16 +1,51 @@
 package com.irvingwu.huiniaotable.data
 
+import com.irvingwu.huiniaotable.t
 import org.json.JSONArray
 import org.json.JSONObject
 
 /** 星期名称，索引 0 对应星期一。 */
-val WEEKDAY_NAMES = listOf("星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日")
+val WEEKDAY_NAMES: List<String>
+    get() = (1..7).map(::weekdayName)
+
+fun weekdayName(dayOfWeek: Int): String = when (dayOfWeek) {
+    1 -> t("星期一", "Monday")
+    2 -> t("星期二", "Tuesday")
+    3 -> t("星期三", "Wednesday")
+    4 -> t("星期四", "Thursday")
+    5 -> t("星期五", "Friday")
+    6 -> t("星期六", "Saturday")
+    7 -> t("星期日", "Sunday")
+    else -> t("星期$dayOfWeek", "Day $dayOfWeek")
+}
+
+fun weekdayShortName(dayOfWeek: Int): String = when (dayOfWeek) {
+    1 -> t("一", "Mon")
+    2 -> t("二", "Tue")
+    3 -> t("三", "Wed")
+    4 -> t("四", "Thu")
+    5 -> t("五", "Fri")
+    6 -> t("六", "Sat")
+    7 -> t("日", "Sun")
+    else -> "—"
+}
+
+fun weekdayCompactLabel(dayOfWeek: Int): String =
+    if (dayOfWeek in 1..7) t("周${weekdayShortName(dayOfWeek)}", weekdayShortName(dayOfWeek)) else "—"
 
 /** 周末列的显示策略。默认「自动」：周六周日没课就不占地方。 */
-enum class WeekendMode(val label: String) {
-    Auto("自动"),
-    Always("显示"),
-    Hide("隐藏"),
+enum class WeekendMode {
+    Auto,
+    Always,
+    Hide,
+    ;
+
+    val label: String
+        get() = when (this) {
+            Auto -> t("自动", "Auto")
+            Always -> t("显示", "Show")
+            Hide -> t("隐藏", "Hide")
+        }
 }
 
 /** 课表网格里的一行（一个「大节」）。 */
@@ -18,11 +53,11 @@ data class SlotRow(val label: String, val startSlot: Int, val endSlot: Int) {
     companion object {
         /** 解析失败时的兜底行，覆盖常见 1-10 节。 */
         val DEFAULT = listOf(
-            SlotRow("第1-2节", 1, 2),
-            SlotRow("第3-4节", 3, 4),
-            SlotRow("第5-6节", 5, 6),
-            SlotRow("第7-8节", 7, 8),
-            SlotRow("第9-10节", 9, 10),
+            SlotRow(t("第1-2节", "Periods 1–2"), 1, 2),
+            SlotRow(t("第3-4节", "Periods 3–4"), 3, 4),
+            SlotRow(t("第5-6节", "Periods 5–6"), 5, 6),
+            SlotRow(t("第7-8节", "Periods 7–8"), 7, 8),
+            SlotRow(t("第9-10节", "Periods 9–10"), 9, 10),
         )
     }
 }
@@ -51,11 +86,15 @@ data class Course(
         ).joinToString("|")
 
     val slotText: String
-        get() = if (startSlot >= endSlot) "第${startSlot}节" else "第${startSlot}-${endSlot}节"
+        get() = if (startSlot >= endSlot) {
+            t("第${startSlot}节", "Period $startSlot")
+        } else {
+            t("第${startSlot}-${endSlot}节", "Periods $startSlot–$endSlot")
+        }
 
     val weekText: String get() = formatWeeks(weeks)
 
-    val dayText: String get() = WEEKDAY_NAMES.getOrElse(dayOfWeek - 1) { "星期$dayOfWeek" }
+    val dayText: String get() = weekdayName(dayOfWeek)
 
     /** 周次解析失败（空）时按「每周都有」处理，避免课程从界面上消失。 */
     fun activeIn(week: Int): Boolean = weeks.isEmpty() || weeks.contains(week)
@@ -200,7 +239,7 @@ fun String.cleanClassLabel(): String =
 
 /** 把周次压缩成人类可读的文本：2..18 -> "2-18周"。 */
 fun formatWeeks(weeks: List<Int>): String {
-    if (weeks.isEmpty()) return "周次未知"
+    if (weeks.isEmpty()) return t("周次未知", "Weeks unknown")
     val sorted = weeks.distinct().sorted()
     val parts = mutableListOf<String>()
     var i = 0
@@ -210,7 +249,8 @@ fun formatWeeks(weeks: List<Int>): String {
         parts += if (j > i) "${sorted[i]}-${sorted[j]}" else "${sorted[i]}"
         i = j + 1
     }
-    return parts.joinToString(",") + "周"
+    val joined = parts.joinToString(t(",", ", "))
+    return t("${joined}周", "Weeks $joined")
 }
 
 internal fun JSONObject.optNullableString(name: String): String? =

@@ -3,10 +3,25 @@ package com.irvingwu.huiniaotable.data
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
+import java.util.Locale
 
 class HolidayClientTest {
+
+    private val defaultLocale = Locale.getDefault()
+
+    @Before
+    fun useChineseLocale() {
+        Locale.setDefault(Locale.CHINA)
+    }
+
+    @After
+    fun restoreLocale() {
+        Locale.setDefault(defaultLocale)
+    }
 
     @Test
     fun testHolidayRegionMapping() {

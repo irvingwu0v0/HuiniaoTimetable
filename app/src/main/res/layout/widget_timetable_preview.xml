@@ -21,7 +21,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="10月5日 星期一 · 第3周"
+        android:text="@string/widget_preview_date"
         android:textColor="@color/widget_muted"
         android:textSize="11sp" />
 
@@ -60,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="高等数学"
+                android:text="@string/widget_preview_course_1"
                 android:textColor="@color/widget_muted"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -69,7 +69,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="10:00-10:45 · 第一教学楼 101"
+                android:text="@string/widget_preview_time_1"
                 android:textColor="@color/widget_muted"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="大学英语"
+                android:text="@string/widget_preview_course_2"
                 android:textColor="@color/widget_accent"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -110,7 +110,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:text="10:50-11:35 · 第二教学楼 203"
+                android:text="@string/widget_preview_time_2"
                 android:textColor="@color/widget_muted"
                 android:textSize="11sp" />
         </LinearLayout>

@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.TimetableRepository
 import com.irvingwu.huiniaotable.notify.ClassNotifier
@@ -80,7 +81,13 @@ fun DebugScreen(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
         coroutineScope.launch {
-            snackbarHostState.showSnackbar(if (granted) "已授予通知权限" else "未授予通知权限")
+            snackbarHostState.showSnackbar(
+                if (granted) {
+                    t("已授予通知权限", "Notification permission granted")
+                } else {
+                    t("未授予通知权限", "Notification permission not granted")
+                },
+            )
         }
     }
 
@@ -92,13 +99,13 @@ fun DebugScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "返回",
+                            contentDescription = t("返回", "Back"),
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "开发者调试",
+                        text = t("开发者调试", "Developer tools"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -119,7 +126,10 @@ fun DebugScreen(
             item {
                 DebugCard {
                     Text(
-                        text = "立刻发送一条真实的通知，用于核对样式与系统「实时更新」的呈现效果，无需等到实际上课时段。",
+                        text = t(
+                            "立刻发送一条真实的通知，用于核对样式与系统「实时更新」的呈现效果，无需等到实际上课时段。",
+                            "Send a real notification now to check its style and the system Live Update appearance without waiting for class.",
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -139,7 +149,7 @@ fun DebugScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("立即发送「正在上课」实时更新预览")
+                        Text(t("立即发送「正在上课」实时更新预览", "Preview an in-class Live Update"))
                     }
 
                     FilledTonalButton(
@@ -155,13 +165,15 @@ fun DebugScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("发送「课前 15 分钟」提醒预览")
+                        Text(t("发送「课前 15 分钟」提醒预览", "Preview a 15-minute reminder"))
                     }
 
                     OutlinedButton(
                         onClick = {
                             ClassNotifier.clearNotifications(context)
-                            coroutineScope.launch { snackbarHostState.showSnackbar("已清除通知") }
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(t("已清除通知", "Notifications cleared"))
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -171,7 +183,7 @@ fun DebugScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("清除实时通知 / 提醒")
+                        Text(t("清除实时通知 / 提醒", "Clear live updates / reminders"))
                     }
                 }
             }
@@ -179,14 +191,19 @@ fun DebugScreen(
             item {
                 DebugCard {
                     Text(
-                        text = "长按课程方块可拖动到空白格子。这里可一次性清除所有手动拖动的位置调整，恢复课表原始排布。",
+                        text = t(
+                            "长按课程方块可拖动到空白格子。这里可一次性清除所有手动拖动的位置调整，恢复课表原始排布。",
+                            "Long-press a course to drag it into an empty slot. Reset every manual position here.",
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedButton(
                         onClick = {
                             TimetableRepository.clearAllCoursePlacements()
-                            coroutineScope.launch { snackbarHostState.showSnackbar("已清除全部手动排布") }
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(t("已清除全部手动排布", "All manual positions cleared"))
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -196,7 +213,7 @@ fun DebugScreen(
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("清除全部手动排布")
+                        Text(t("清除全部手动排布", "Clear all manual positions"))
                     }
                 }
             }
@@ -204,18 +221,22 @@ fun DebugScreen(
             item {
                 DebugCard {
                     DebugValueRow(
-                        label = "系统 Live Updates",
-                        value = if (ClassNotifier.liveUpdatesSupported) "支持（Android 16+）" else "不支持，降级为普通进度通知",
+                        label = t("系统 Live Updates", "System Live Updates"),
+                        value = if (ClassNotifier.liveUpdatesSupported) {
+                            t("支持（Android 16+）", "Supported (Android 16+)")
+                        } else {
+                            t("不支持，降级为普通进度通知", "Unsupported; using a standard progress notification")
+                        },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DebugValueRow(
-                        label = "通知开关",
-                        value = if (state.classNotify) "已开启" else "已关闭",
+                        label = t("通知开关", "Notifications"),
+                        value = if (state.classNotify) t("已开启", "On") else t("已关闭", "Off"),
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DebugValueRow(
-                        label = "通知权限",
-                        value = if (ClassNotifier.canPost(context)) "已授予" else "未授予",
+                        label = t("通知权限", "Notification permission"),
+                        value = if (ClassNotifier.canPost(context)) t("已授予", "Granted") else t("未授予", "Not granted"),
                     )
                     if (!ClassNotifier.canPost(context) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         Spacer(Modifier.height(8.dp))
@@ -229,23 +250,26 @@ fun DebugScreen(
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text("申请通知权限")
+                            Text(t("申请通知权限", "Request notification permission"))
                         }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DebugValueRow(
-                        label = "开学基准日",
-                        value = state.termStart?.toString() ?: "未设置",
+                        label = t("开学基准日", "Term start date"),
+                        value = state.termStart?.toString() ?: t("未设置", "Not set"),
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    DebugValueRow(label = "当前教学周", value = "第 ${state.currentWeek} 周")
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     DebugValueRow(
-                        label = "课表课程数",
-                        value = "${state.schedule?.courses?.size ?: 0} 节",
+                        label = t("当前教学周", "Current week"),
+                        value = t("第 ${state.currentWeek} 周", "Week ${state.currentWeek}"),
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    DebugValueRow(label = "最近同步", value = formatDebugTime(state.fetchedAt))
+                    DebugValueRow(
+                        label = t("课表课程数", "Timetable entries"),
+                        value = t("${state.schedule?.courses?.size ?: 0} 节", "${state.schedule?.courses?.size ?: 0}"),
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    DebugValueRow(label = t("最近同步", "Last sync"), value = formatDebugTime(state.fetchedAt))
                 }
             }
         }
@@ -300,7 +324,7 @@ private fun DebugValueRow(label: String, value: String) {
 private val debugTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd HH:mm")
 
 private fun formatDebugTime(epochMillis: Long): String {
-    if (epochMillis <= 0L) return "尚未同步"
+    if (epochMillis <= 0L) return t("尚未同步", "Never synced")
     return Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .format(debugTimeFormatter)

@@ -12,9 +12,11 @@ import com.irvingwu.huiniaotable.data.WeekendMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
+import java.util.Locale
 
 /**
  * 灰鸟课表作息规范单元测试：
@@ -23,9 +25,17 @@ import java.time.LocalDate
  */
 class ClassTimesTest {
 
+    private val defaultLocale = Locale.getDefault()
+
     @Before
     fun setUp() {
+        Locale.setDefault(Locale.CHINA)
         ClassTimes.resetToDefault()
+    }
+
+    @After
+    fun restoreLocale() {
+        Locale.setDefault(defaultLocale)
     }
 
     @Test

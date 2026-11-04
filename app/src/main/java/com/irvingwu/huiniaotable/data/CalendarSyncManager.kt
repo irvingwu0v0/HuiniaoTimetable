@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.CalendarContract
 import androidx.core.content.ContextCompat
+import com.irvingwu.huiniaotable.t
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -57,7 +58,12 @@ object CalendarSyncManager {
     ): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
             val schedule = state.schedule ?: return@runCatching 0
-            val termStart = state.termStart ?: throw IllegalStateException("未设定学期开学首周基准日，无法确定公历时间")
+            val termStart = state.termStart ?: throw IllegalStateException(
+                t(
+                    "未设定学期开学首周基准日，无法确定公历时间",
+                    "Set the first-week start date before syncing dates to the calendar.",
+                ),
+            )
 
             val resolver = context.contentResolver
             val calendarId = getOrCreateCalendarId(context)
@@ -99,13 +105,25 @@ object CalendarSyncManager {
                         val endMillis = date.atTime(endTime).atZone(zoneId).toInstant().toEpochMilli()
 
                         val description = buildString {
-                            course.teacher?.let { append("主讲教师: $it\n") }
-                            course.room?.let { append("上课场地: $it\n") }
-                            course.classLabel?.let { append("教学班级: $it\n") }
-                            append("时段安排: 第 ${course.slotText} (${periods[startSlotIdx].start}–${periods[endSlotIdx].end})\n")
-                            append("教学周次: 第 $week 周 (全课程 ${course.weekText})\n")
-                            append("作息规范: ${scheme.fullLabel}\n")
-                            state.makeupLabelFor(date, week)?.let { append("调休说明: 调休教学日 ($it)\n") }
+                            course.teacher?.let { append(t("主讲教师: $it", "Instructor: $it") + "\n") }
+                            course.room?.let { append(t("上课场地: $it", "Location: $it") + "\n") }
+                            course.classLabel?.let { append(t("教学班级: $it", "Class: $it") + "\n") }
+                            append(
+                                t(
+                                    "时段安排: ${course.slotText} (${periods[startSlotIdx].start}–${periods[endSlotIdx].end})",
+                                    "Time: ${course.slotText} (${periods[startSlotIdx].start}–${periods[endSlotIdx].end})",
+                                ) + "\n",
+                            )
+                            append(
+                                t(
+                                    "教学周次: 第 $week 周 (全课程 ${course.weekText})",
+                                    "Teaching week: Week $week (course: ${course.weekText})",
+                                ) + "\n",
+                            )
+                            append(t("作息规范: ${scheme.fullLabel}", "Schedule: ${scheme.fullLabel}") + "\n")
+                            state.makeupLabelFor(date, week)?.let {
+                                append(t("调休说明: 调休教学日 ($it)", "Makeup day: $it") + "\n")
+                            }
                             append(SYNC_TAG)
                         }
 
@@ -167,7 +185,7 @@ object CalendarSyncManager {
     suspend fun clearAllSyncedEvents(context: Context): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
             if (!hasCalendarPermission(context)) {
-                throw SecurityException("未授予系统日历写入权限")
+                throw SecurityException(t("未授予系统日历写入权限", "Calendar write permission was not granted"))
             }
             val resolver = context.contentResolver
             val deletedCount = resolver.delete(
@@ -236,8 +254,8 @@ object CalendarSyncManager {
         val values = ContentValues().apply {
             put(CalendarContract.Calendars.ACCOUNT_NAME, ACCOUNT_NAME)
             put(CalendarContract.Calendars.ACCOUNT_TYPE, CalendarContract.ACCOUNT_TYPE_LOCAL)
-            put(CalendarContract.Calendars.NAME, "灰鸟课表")
-            put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, "灰鸟课表")
+            put(CalendarContract.Calendars.NAME, t("灰鸟课表", "Huiniao"))
+            put(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, t("灰鸟课表", "Huiniao"))
             put(CalendarContract.Calendars.CALENDAR_COLOR, 0xFF14663F.toInt())
             put(CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL, CalendarContract.Calendars.CAL_ACCESS_OWNER)
             put(CalendarContract.Calendars.OWNER_ACCOUNT, ACCOUNT_NAME)

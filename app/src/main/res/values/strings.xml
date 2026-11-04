@@ -2,4 +2,9 @@
     <string name="app_name">灰鸟课表</string>
     <string name="widget_title">今日课表</string>
     <string name="widget_description">今日课程一览：上课时间、课程名与教室，随每节课进度自动着色</string>
+    <string name="widget_preview_date">10月5日 星期一 · 第3周</string>
+    <string name="widget_preview_course_1">高等数学</string>
+    <string name="widget_preview_time_1">10:00-10:45 · 第一教学楼 101</string>
+    <string name="widget_preview_course_2">大学英语</string>
+    <string name="widget_preview_time_2">10:50-11:35 · 第二教学楼 203</string>
 </resources>

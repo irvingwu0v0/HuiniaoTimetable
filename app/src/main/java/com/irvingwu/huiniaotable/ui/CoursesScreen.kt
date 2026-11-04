@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Course
 import com.irvingwu.huiniaotable.data.UnscheduledCourse
@@ -100,18 +101,21 @@ fun CoursesContent(
                         )
                         Column(Modifier.weight(1f)) {
                             Text(
-                                text = "已调整 ${state.movedCourseCount} 门课程的位置",
+                                text = t(
+                                    "已调整 ${state.movedCourseCount} 门课程的位置",
+                                    "${state.movedCourseCount} course positions changed",
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Text(
-                                text = "恢复后所有课程回到课表原始排布",
+                                text = t("恢复后所有课程回到课表原始排布", "Restore every course to its original position"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         OutlinedButton(onClick = onClearPlacements) {
-                            Text("恢复所有调课")
+                            Text(t("恢复所有调课", "Reset all changes"))
                         }
                     }
                 }
@@ -121,7 +125,10 @@ fun CoursesContent(
         item {
             SectionHeader(
                 icon = Icons.Outlined.Class,
-                title = "计划内排课教学课程 (${schedule.distinctCourses.size} 门)",
+                title = t(
+                    "计划内排课教学课程 (${schedule.distinctCourses.size} 门)",
+                    "Scheduled courses (${schedule.distinctCourses.size})",
+                ),
             )
         }
 
@@ -142,7 +149,10 @@ fun CoursesContent(
                 Spacer(Modifier.height(10.dp))
                 SectionHeader(
                     icon = Icons.Outlined.Info,
-                    title = "无课表记录教学计划 (${schedule.unscheduled.size} 门)",
+                    title = t(
+                        "无课表记录教学计划 (${schedule.unscheduled.size} 门)",
+                        "Courses without scheduled times (${schedule.unscheduled.size})",
+                    ),
                 )
             }
             items(
@@ -363,7 +373,7 @@ private fun UnscheduledCard(course: UnscheduledCourse) {
 
             course.code?.let { c ->
                 Text(
-                    text = "课程代码：$c",
+                    text = t("课程代码：$c", "Course code: $c"),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )

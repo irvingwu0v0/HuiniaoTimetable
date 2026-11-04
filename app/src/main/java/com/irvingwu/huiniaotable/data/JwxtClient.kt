@@ -1,5 +1,6 @@
 package com.irvingwu.huiniaotable.data
 
+import com.irvingwu.huiniaotable.t
 import java.net.URLEncoder
 import java.util.Base64
 
@@ -8,7 +9,7 @@ sealed interface LoginResult {
     data class Failure(val message: String) : LoginResult
 }
 
-class SessionExpiredException : Exception("登录状态已失效")
+class SessionExpiredException : Exception(t("登录状态已失效", "Session expired"))
 
 /**
  * 正方教务系统客户端。支持用户自定义教务系统端点网址。
@@ -45,7 +46,12 @@ class JwxtClient(
         val loginUrl = buildUrl("")
         val loginPage = http.get(loginUrl)
         if (loginPage.body.contains("id=\"SafeCodeImg\"") || loginPage.body.contains("name=\"SafeCode\"")) {
-            return LoginResult.Failure("教务系统要求输入验证码，请用浏览器登录后使用")
+            return LoginResult.Failure(
+                t(
+                    "教务系统要求输入验证码，请用浏览器登录后使用",
+                    "The academic system requires a CAPTCHA. Please sign in with a browser first.",
+                ),
+            )
         }
 
         val encoded = base64(studentId) + "%%%" + base64(password)
@@ -62,13 +68,15 @@ class JwxtClient(
         )
 
         if (response.body.contains("id=\"loginForm\"")) {
-            return LoginResult.Failure(extractLoginMessage(response.body) ?: "学号或密码错误")
+            return LoginResult.Failure(
+                extractLoginMessage(response.body) ?: t("学号或密码错误", "Incorrect student ID or password"),
+            )
         }
 
         val probeUrl = buildUrl("framework/xsMain.jsp")
         val probe = http.get(probeUrl)
         if (probe.body.contains("id=\"loginForm\"")) {
-            return LoginResult.Failure("登录未生效，请稍后重试")
+            return LoginResult.Failure(t("登录未生效，请稍后重试", "Sign-in did not complete. Please try again."))
         }
         return LoginResult.Success
     }

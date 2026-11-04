@@ -6,13 +6,28 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
+import java.util.Locale
 
 /**
  * 用与教务系统真实页面同构的样本验证课表解析逻辑。
  * 样本里的课程/教师都是虚构的，不含真实学生数据。
  */
 class KbParserTest {
+
+    private val defaultLocale = Locale.getDefault()
+
+    @Before
+    fun useChineseLocale() {
+        Locale.setDefault(Locale.CHINA)
+    }
+
+    @After
+    fun restoreLocale() {
+        Locale.setDefault(defaultLocale)
+    }
 
     private val html: String = checkNotNull(javaClass.classLoader?.getResourceAsStream("kb_sample.html")) {
         "测试资源 kb_sample.html 缺失"

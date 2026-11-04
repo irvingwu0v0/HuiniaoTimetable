@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.irvingwu.huiniaotable.MainActivity
 import com.irvingwu.huiniaotable.R
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.TimetableRepository
 import java.time.LocalDate
@@ -177,14 +178,19 @@ object ClassNotifier {
     fun previewLiveUpdate(context: Context): String {
         return try {
             val app = context.applicationContext
-            if (!canPost(app)) return "未授予通知权限，无法发送实时更新预览"
+            if (!canPost(app)) {
+                return t("未授予通知权限，无法发送实时更新预览", "Notification permission is required to preview Live Updates")
+            }
             TimetableRepository.init(app)
             ensureChannels(app)
             val occurrence = previewOccurrence()
             postLiveUpdate(app, occurrence, PREVIEW_PROGRESS_PERCENT)
-            "已发送实时更新预览：${occurrence.name}"
-        } catch (t: Throwable) {
-            "发送实时更新预览失败：${t.localizedMessage ?: t.javaClass.simpleName}"
+            t("已发送实时更新预览：${occurrence.name}", "Live Update preview sent: ${occurrence.name}")
+        } catch (error: Throwable) {
+            t(
+                "发送实时更新预览失败：${error.localizedMessage ?: error.javaClass.simpleName}",
+                "Failed to send Live Update preview: ${error.localizedMessage ?: error.javaClass.simpleName}",
+            )
         }
     }
 
@@ -192,14 +198,19 @@ object ClassNotifier {
     fun previewReminder(context: Context): String {
         return try {
             val app = context.applicationContext
-            if (!canPost(app)) return "未授予通知权限，无法发送提醒预览"
+            if (!canPost(app)) {
+                return t("未授予通知权限，无法发送提醒预览", "Notification permission is required to preview reminders")
+            }
             TimetableRepository.init(app)
             ensureChannels(app)
             val occurrence = previewOccurrence()
             postReminder(app, occurrence, LEAD_MINUTES.toLong())
-            "已发送课前提醒预览：${occurrence.name}"
-        } catch (t: Throwable) {
-            "发送课前提醒预览失败：${t.localizedMessage ?: t.javaClass.simpleName}"
+            t("已发送课前提醒预览：${occurrence.name}", "Class reminder preview sent: ${occurrence.name}")
+        } catch (error: Throwable) {
+            t(
+                "发送课前提醒预览失败：${error.localizedMessage ?: error.javaClass.simpleName}",
+                "Failed to send class reminder preview: ${error.localizedMessage ?: error.javaClass.simpleName}",
+            )
         }
     }
 
@@ -222,9 +233,9 @@ object ClassNotifier {
             list.firstOrNull { it.start.isAfter(now) }?.let { return it }
         }
         return Occurrence(
-            name = "大学英语",
-            teacher = "李老师",
-            room = "第一教学楼 102",
+            name = t("大学英语", "College English"),
+            teacher = t("李老师", "Prof. Li"),
+            room = t("第一教学楼 102", "Teaching Building 1, Room 102"),
             start = now.minusMinutes(10),
             end = now.plusMinutes(35),
         )
@@ -256,7 +267,9 @@ object ClassNotifier {
             val body = occurrence.detailText
             val notification = Notification.Builder(context, CHANNEL_REMINDER)
                 .setSmallIcon(R.drawable.ic_notify)
-                .setContentTitle("还有 ${minutes} 分钟上课 · ${occurrence.name}")
+                .setContentTitle(
+                    t("还有 $minutes 分钟上课 · ${occurrence.name}", "Class starts in $minutes min · ${occurrence.name}"),
+                )
                 .setContentText(body)
                 .setStyle(Notification.BigTextStyle().bigText("${occurrence.name}\n$body"))
                 .setContentIntent(openAppPendingIntent(context))
@@ -274,7 +287,7 @@ object ClassNotifier {
         var liveStyleApplied = false
         val builder = Notification.Builder(context, CHANNEL_LIVE)
             .setSmallIcon(R.drawable.ic_notify)
-            .setContentTitle("正在上课 · ${occurrence.name}")
+            .setContentTitle(t("正在上课 · ${occurrence.name}", "In class · ${occurrence.name}"))
             .setContentText(occurrence.detailText)
             .setContentIntent(openAppPendingIntent(context))
             .setOngoing(true)
@@ -303,7 +316,7 @@ object ClassNotifier {
                 try {
                     val fallbackBuilder = Notification.Builder(context, CHANNEL_LIVE)
                         .setSmallIcon(R.drawable.ic_notify)
-                        .setContentTitle("正在上课 · ${occurrence.name}")
+                        .setContentTitle(t("正在上课 · ${occurrence.name}", "In class · ${occurrence.name}"))
                         .setContentText(occurrence.detailText)
                         .setContentIntent(openAppPendingIntent(context))
                         .setOngoing(true)
@@ -341,7 +354,7 @@ object ClassNotifier {
                 // Android 16 Rich Ongoing / Live Updates 相关 Builder API（在小米 HyperOS 等厂商 ROM 上可能未包含或未启用），
                 // 通过反射调用，若不存在则安全跳过，防止抛出 NoSuchMethodError 造成崩溃。
                 safeInvokeBuilder(builder, "setRequestPromotedOngoing", Boolean::class.javaPrimitiveType, true)
-                safeInvokeBuilder(builder, "setShortCriticalText", CharSequence::class.java, "上课中")
+                safeInvokeBuilder(builder, "setShortCriticalText", CharSequence::class.java, t("上课中", "In class"))
                 true
             } catch (t: Throwable) {
                 false
@@ -466,19 +479,19 @@ object ClassNotifier {
                 manager.createNotificationChannel(
                     NotificationChannel(
                         CHANNEL_REMINDER,
-                        "上课提醒",
+                        t("上课提醒", "Class reminders"),
                         NotificationManager.IMPORTANCE_HIGH,
-                    ).apply { description = "课前 15 分钟提醒即将开始的课程" },
+                    ).apply { description = t("课前 15 分钟提醒即将开始的课程", "Notify 15 minutes before class starts") },
                 )
             }
             if (manager.getNotificationChannel(CHANNEL_LIVE) == null) {
                 manager.createNotificationChannel(
                     NotificationChannel(
                         CHANNEL_LIVE,
-                        "上课实时状态",
+                        t("上课实时状态", "Live class status"),
                         NotificationManager.IMPORTANCE_LOW,
                     ).apply {
-                        description = "上课期间常驻显示当前课程与进度"
+                        description = t("上课期间常驻显示当前课程与进度", "Show the current class and progress while in session")
                         setShowBadge(false)
                     },
                 )

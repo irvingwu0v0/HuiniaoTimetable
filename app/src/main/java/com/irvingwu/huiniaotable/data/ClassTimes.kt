@@ -1,5 +1,6 @@
 package com.irvingwu.huiniaotable.data
 
+import com.irvingwu.huiniaotable.t
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -39,7 +40,10 @@ data class CampusBuilding(
         get() = if (campus.isNotBlank() && campus != label) "$campus · $label" else label
 
     val timeSummary: String
-        get() = "1-2节 ${ClassTimes.timeTextFor(1, 2, this)} · 3-4节 ${ClassTimes.timeTextFor(3, 4, this)}"
+        get() = t(
+            "1-2节 ${ClassTimes.timeTextFor(1, 2, this)} · 3-4节 ${ClassTimes.timeTextFor(3, 4, this)}",
+            "Periods 1–2 ${ClassTimes.timeTextFor(1, 2, this)} · Periods 3–4 ${ClassTimes.timeTextFor(3, 4, this)}",
+        )
 }
 
 /**
@@ -67,11 +71,11 @@ object ClassTimes {
 
     val DEFAULT_BUILDING = CampusBuilding(
         id = "default",
-        label = "标准教学楼作息",
-        campus = "主校区",
+        label = t("标准教学楼作息", "Standard Schedule"),
+        campus = t("主校区", "Main Campus"),
     )
 
-    var configName: String = "标准作息表"
+    var configName: String = t("标准作息表", "Standard Schedule")
         private set
 
     var defaultBuilding: CampusBuilding = DEFAULT_BUILDING
@@ -321,7 +325,11 @@ object ClassTimes {
         isDefault: Boolean = false,
     ) {
         synchronized(this) {
-            val building = CampusBuilding(id, label.trim().ifBlank { "未命名方案" }, campus.trim().ifBlank { "主校区" })
+            val building = CampusBuilding(
+                id,
+                label.trim().ifBlank { t("未命名方案", "Unnamed Schedule") },
+                campus.trim().ifBlank { t("主校区", "Main Campus") },
+            )
             buildingsMap[id] = building
             periodsMap[id] = periods
             if (isDefault || buildingsMap.size == 1) {
@@ -368,7 +376,7 @@ object ClassTimes {
      */
     fun resetToDefault() {
         synchronized(this) {
-            configName = "标准作息表"
+            configName = t("标准作息表", "Standard Schedule")
             defaultBuilding = DEFAULT_BUILDING
             buildingsMap.clear()
             buildingsMap[DEFAULT_BUILDING.id] = DEFAULT_BUILDING
@@ -383,7 +391,7 @@ object ClassTimes {
      */
     fun importJson(jsonStr: String): Boolean = runCatching {
         val root = JSONObject(jsonStr)
-        val name = root.optString("name", "自定义作息表")
+        val name = root.optString("name", t("自定义作息表", "Custom Schedule"))
         val defaultId = root.optString("defaultSchemeId", "default")
         val schemesArr = root.optJSONArray("schemes") ?: return false
 
@@ -393,8 +401,8 @@ object ClassTimes {
         for (i in 0 until schemesArr.length()) {
             val sObj = schemesArr.getJSONObject(i)
             val id = sObj.getString("id")
-            val campus = sObj.optString("campus", "主校区")
-            val sName = sObj.optString("name", "教学楼作息")
+            val campus = sObj.optString("campus", t("主校区", "Main Campus"))
+            val sName = sObj.optString("name", t("教学楼作息", "Building Schedule"))
             val b = CampusBuilding(id, sName, campus)
             newBuildings[id] = b
 

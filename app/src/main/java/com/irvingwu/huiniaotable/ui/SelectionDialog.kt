@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.irvingwu.huiniaotable.t
 
 /**
  * 符合 Google Material 3 规范的单选确认对话框。
@@ -41,7 +42,7 @@ fun <T> SingleChoiceDialog(
     itemSubtitle: ((T) -> String?)? = null,
     onItemSelected: (T) -> Unit,
     onDismissRequest: () -> Unit,
-    dismissButtonText: String = "取消",
+    dismissButtonText: String = t("取消", "Cancel"),
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -135,7 +136,7 @@ fun <T> GroupedSingleChoiceDialog(
     itemTitle: (T) -> String,
     onItemSelected: (T) -> Unit,
     onDismissRequest: () -> Unit,
-    dismissButtonText: String = "取消",
+    dismissButtonText: String = t("取消", "Cancel"),
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,

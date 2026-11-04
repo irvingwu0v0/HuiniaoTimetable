@@ -57,6 +57,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.irvingwu.huiniaotable.R
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 
 /**
@@ -105,7 +106,7 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_app_logo),
-                        contentDescription = "应用图标",
+                        contentDescription = t("应用图标", "App icon"),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
                     )
@@ -115,14 +116,14 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
             Spacer(Modifier.height(20.dp))
 
             Text(
-                text = "登录灰鸟课表",
+                text = t("登录灰鸟课表", "Sign in to Huiniao"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "优雅、高效的 Material You 高校课表工具",
+                text = t("优雅、高效的 Material You 高校课表工具", "An elegant, efficient Material You timetable for university"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -146,13 +147,13 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                                         OutlinedTextField(
                         value = jwxtUrl,
                         onValueChange = { jwxtUrl = it },
-                        label = { Text("教务系统网址 (URL)") },
+                        label = { Text(t("教务系统网址 (URL)", "Academic system URL")) },
                         placeholder = { Text("https://jwxt.XXXX.edu.cn/") },
                         singleLine = true,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Language,
-                                contentDescription = "教务网址",
+                                contentDescription = t("教务网址", "Academic system URL"),
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -162,13 +163,13 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                     OutlinedTextField(
                         value = studentId,
                         onValueChange = { studentId = it },
-                        label = { Text("统一身份认证学号") },
-                        placeholder = { Text("请输入学号") },
+                        label = { Text(t("统一身份认证学号", "Student ID")) },
+                        placeholder = { Text(t("请输入学号", "Enter your student ID")) },
                         singleLine = true,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Person,
-                                contentDescription = "学号标识",
+                                contentDescription = t("学号标识", "Student ID field"),
                             )
                         },
                         trailingIcon = {
@@ -176,7 +177,7 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                                 IconButton(onClick = { studentId = "" }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Clear,
-                                        contentDescription = "清除学号输入",
+                                        contentDescription = t("清除学号输入", "Clear student ID"),
                                     )
                                 }
                             }
@@ -191,20 +192,24 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("认证密码") },
-                        placeholder = { Text("请输入教务系统登录密码") },
+                        label = { Text(t("认证密码", "Password")) },
+                        placeholder = { Text(t("请输入教务系统登录密码", "Enter your academic system password")) },
                         singleLine = true,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Lock,
-                                contentDescription = "密码标识",
+                                contentDescription = t("密码标识", "Password field"),
                             )
                         },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     imageVector = if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                                    contentDescription = if (passwordVisible) "隐藏密码明文" else "显示密码明文",
+                                    contentDescription = if (passwordVisible) {
+                                        t("隐藏密码明文", "Hide password")
+                                    } else {
+                                        t("显示密码明文", "Show password")
+                                    },
                                 )
                             }
                         },
@@ -237,7 +242,7 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                                 ) {
                                     Icon(
                                         imageVector = Icons.Outlined.ErrorOutline,
-                                        contentDescription = "认证错误提示",
+                                        contentDescription = t("认证错误提示", "Authentication error"),
                                         modifier = Modifier.size(20.dp),
                                     )
                                     Text(
@@ -264,7 +269,7 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                                 color = MaterialTheme.colorScheme.onPrimary,
                             )
                             Spacer(Modifier.width(10.dp))
-                            Text("系统鉴权中…", style = MaterialTheme.typography.labelLarge)
+                            Text(t("系统鉴权中…", "Signing in…"), style = MaterialTheme.typography.labelLarge)
                         } else {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.Login,
@@ -272,7 +277,7 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text("验证并登入", style = MaterialTheme.typography.labelLarge)
+                            Text(t("验证并登入", "Verify and sign in"), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -298,20 +303,25 @@ fun LoginScreen(state: AppState, onLogin: (String, String) -> Unit) {
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Security,
-                            contentDescription = "数据安全规范",
+                            contentDescription = t("数据安全规范", "Data security"),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
-                            text = "凭据安全与合规说明",
+                            text = t("凭据安全与合规说明", "Credential security and compliance"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
                     Text(
-                        text = "• 本地隔离持久化：身份凭据仅通过 Android KeyStore 硬件级安全密钥库（AES-GCM-256）加密持久化于设备私有沙盒。\n" +
-                            "• 官方端点通信：认证凭据仅在客户端向您配置的教务系统网址发起 HTTPS 鉴权请求时调用，无任何第三方云端遥测。\n" +
-                            "• 只读查询规范：程序仅实现教学课表数据只读同步协议，不包含选课、退课、成绩提交等变更操作权限。",
+                        text = t(
+                            "• 本地隔离持久化：身份凭据仅通过 Android KeyStore 硬件级安全密钥库（AES-GCM-256）加密持久化于设备私有沙盒。\n" +
+                                "• 官方端点通信：认证凭据仅在客户端向您配置的教务系统网址发起 HTTPS 鉴权请求时调用，无任何第三方云端遥测。\n" +
+                                "• 只读查询规范：程序仅实现教学课表数据只读同步协议，不包含选课、退课、成绩提交等变更操作权限。",
+                            "• Local isolation: credentials are encrypted with Android KeyStore (AES-GCM-256) in the app's private storage.\n" +
+                                "• Direct connection: credentials are only sent to the academic system URL you configure over HTTPS. No third-party telemetry.\n" +
+                                "• Read-only access: the app only reads timetable data and cannot enroll, drop, or submit grades.",
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

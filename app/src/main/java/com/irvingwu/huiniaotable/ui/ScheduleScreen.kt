@@ -125,6 +125,8 @@ import com.irvingwu.huiniaotable.data.SlotRow
 import com.irvingwu.huiniaotable.data.WEEKDAY_NAMES
 import com.irvingwu.huiniaotable.data.cleanClassLabel
 import com.irvingwu.huiniaotable.data.TimetableRepository
+import com.irvingwu.huiniaotable.data.weekdayShortName
+import com.irvingwu.huiniaotable.t
 import androidx.compose.runtime.rememberUpdatedState
 import com.irvingwu.huiniaotable.ui.theme.CoursePalette
 import com.irvingwu.huiniaotable.ui.theme.rememberCoursePalette
@@ -208,12 +210,15 @@ fun ScheduleContent(
                     )
                     Column(Modifier.weight(1f)) {
                         Text(
-                            text = "调课中 · 第 ${state.selectedWeek} 周",
+                            text = t("调课中 · 第 ${state.selectedWeek} 周", "Moving · Week ${state.selectedWeek}"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            text = "点击任意空白格子，把《${placementCourse.name}》放到那里",
+                            text = t(
+                                "点击任意空白格子，把《${placementCourse.name}》放到那里",
+                                "Tap an empty slot to place ${placementCourse.name} there",
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                             maxLines = 2,
@@ -221,7 +226,7 @@ fun ScheduleContent(
                         )
                     }
                     TextButton(onClick = onCancelPlacement) {
-                        Text("取消")
+                        Text(t("取消", "Cancel"))
                     }
                 }
             }
@@ -326,7 +331,7 @@ private fun TermStartCard(
 
     if (showPicker) {
         PickDateDialog(
-            title = "选取开学首周周一日期",
+            title = t("选取开学首周周一日期", "Select the first Monday of term"),
             current = currentStart,
             onDismiss = { showPicker = false },
             onConfirm = {
@@ -361,13 +366,16 @@ private fun TermStartCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "配置学期开学首周基准日",
+                    text = t("配置学期开学首周基准日", "Set the term start date"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
                 Text(
-                    text = "系统将以首周周一自动核算各教学周次与调休安排",
+                    text = t(
+                        "系统将以首周周一自动核算各教学周次与调休安排",
+                        "Teaching weeks and makeup days are calculated from the first Monday",
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                 )
@@ -377,7 +385,7 @@ private fun TermStartCard(
                 onClick = { showPicker = true },
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
             ) {
-                Text("配置日期", style = MaterialTheme.typography.labelLarge)
+                Text(t("配置日期", "Set date"), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -410,7 +418,7 @@ private fun WeekSelector(
         item {
             AssistChip(
                 onClick = onToday,
-                label = { Text("当前周", fontWeight = FontWeight.Medium) },
+                label = { Text(t("当前周", "Current week"), fontWeight = FontWeight.Medium) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Today,
@@ -435,7 +443,7 @@ private fun WeekSelector(
                 onClick = { onSelectWeek(week) },
                 label = {
                     Text(
-                        text = if (isCurrent) "第 $week 周 (当前)" else "第 $week 周",
+                        text = if (isCurrent) t("第 $week 周 (当前)", "Week $week (Current)") else t("第 $week 周", "Week $week"),
                         fontWeight = if (isSelected || isCurrent) FontWeight.SemiBold else FontWeight.Normal,
                     )
                 },
@@ -500,9 +508,15 @@ private fun TodayBar(
             Column(Modifier.weight(1f)) {
                 Text(
                     text = when {
-                        holiday?.isOffDay == true -> "法定节假日 · ${holiday.name}"
-                        makeupLabel != null -> "调休补课日 · 执行 $makeupLabel 安排 (${courses.size} 门)"
-                        else -> "今日安排 · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]} · ${courses.size} 门课程"
+                        holiday?.isOffDay == true -> t("法定节假日 · ${holiday.name}", "Public holiday · ${holiday.name}")
+                        makeupLabel != null -> t(
+                            "调休补课日 · 执行 $makeupLabel 安排 (${courses.size} 门)",
+                            "Makeup day · ${makeupLabel} timetable (${courses.size} classes)",
+                        )
+                        else -> t(
+                            "今日安排 · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]} · ${courses.size} 门课程",
+                            "Today · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]} · ${courses.size} classes",
+                        )
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
@@ -512,8 +526,16 @@ private fun TodayBar(
 
                 if (holiday?.isOffDay != true) {
                     Text(
-                        text = next?.let { "下节课程 · ${state.timeTextFor(it)} ${it.name} (${it.room ?: "场地待定"})" }
-                            ?: if (courses.isEmpty()) "全日无教学计划安排" else "今日教学安排已全部结束",
+                        text = next?.let {
+                            t(
+                                "下节课程 · ${state.timeTextFor(it)} ${it.name} (${it.room ?: "场地待定"})",
+                                "Next class · ${state.timeTextFor(it)} ${it.name} (${it.room ?: "Room TBD"})",
+                            )
+                        } ?: if (courses.isEmpty()) {
+                            t("全日无教学计划安排", "No classes scheduled today")
+                        } else {
+                            t("今日教学安排已全部结束", "All classes have finished for today")
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -524,7 +546,7 @@ private fun TodayBar(
 
             Icon(
                 imageVector = Icons.Outlined.ExpandMore,
-                contentDescription = "查看今日课程详情",
+                contentDescription = t("查看今日课程详情", "View today's schedule"),
                 tint = contentColor.copy(alpha = 0.7f),
             )
         }
@@ -890,7 +912,7 @@ private fun DayHeader(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = WEEKDAY_NAMES[day - 1].removePrefix("星期"),
+                    text = weekdayShortName(day),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                     color = contentColor,
@@ -903,7 +925,7 @@ private fun DayHeader(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "休",
+                            text = t("休", "Off"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 8.sp,
                                 lineHeight = 8.sp,
@@ -921,7 +943,7 @@ private fun DayHeader(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "班",
+                            text = t("班", "Class"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 8.sp,
                                 lineHeight = 8.sp,
@@ -981,7 +1003,7 @@ private fun SlotLabel(
             color = MaterialTheme.colorScheme.surfaceContainerHighest,
         ) {
             Text(
-                text = row.label.replace("第", "").replace("节", "").trim(),
+                text = "${row.startSlot}-${row.endSlot}",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
@@ -1308,7 +1330,10 @@ private fun TodaySheet(
                     modifier = Modifier.size(24.dp),
                 )
                 Text(
-                    text = "今日教学日程 · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]}",
+                    text = t(
+                        "今日教学日程 · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]}",
+                        "Today's classes · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]}",
+                    ),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
@@ -1332,9 +1357,12 @@ private fun TodaySheet(
                         )
                         Text(
                             text = when {
-                                holiday.isOffDay -> "法定休假：${holiday.name}"
-                                makeupLabel != null -> "调休补课安排：执行 $makeupLabel 课表"
-                                else -> "调休上班日：${holiday.name}"
+                                holiday.isOffDay -> t("法定休假：${holiday.name}", "Public holiday: ${holiday.name}")
+                                makeupLabel != null -> t(
+                                    "调休补课安排：执行 $makeupLabel 课表",
+                                    "Makeup schedule: $makeupLabel timetable",
+                                )
+                                else -> t("调休上班日：${holiday.name}", "Makeup workday: ${holiday.name}")
                             },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
@@ -1353,7 +1381,7 @@ private fun TodaySheet(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "今日无任何教学计划安排",
+                        text = t("今日无任何教学计划安排", "No classes scheduled today"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1489,7 +1517,7 @@ fun CourseDetailSheet(
                     IconButton(onClick = { showWeekJump = true }) {
                         Icon(
                             imageVector = Icons.Outlined.EventRepeat,
-                            contentDescription = "调课 · 跳到指定教学周",
+                            contentDescription = t("调课 · 跳到指定教学周", "Move class · jump to a week"),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -1531,31 +1559,31 @@ fun CourseDetailSheet(
 
             DetailListItem(
                 icon = Icons.Outlined.Schedule,
-                headline = "教学时段",
-                supporting = "${course.dayText} ${course.slotText} (${ClassTimes.timeTextFor(course.startSlot, course.endSlot, scheme).ifBlank { "作息待定" }})",
+                headline = t("教学时段", "Time"),
+                supporting = "${course.dayText} ${course.slotText} (${ClassTimes.timeTextFor(course.startSlot, course.endSlot, scheme).ifBlank { t("作息待定", "Time TBD") }})",
             )
 
             DetailListItem(
                 icon = Icons.Outlined.MeetingRoom,
-                headline = "教学场地",
-                supporting = course.room ?: "未指定具体教室",
+                headline = t("教学场地", "Location"),
+                supporting = course.room ?: t("未指定具体教室", "No room specified"),
             )
 
             DetailListItem(
                 icon = Icons.Outlined.Person,
-                headline = "主讲教师",
-                supporting = course.teacher ?: "教师信息未录入",
+                headline = t("主讲教师", "Instructor"),
+                supporting = course.teacher ?: t("教师信息未录入", "Instructor not provided"),
             )
 
             DetailListItem(
                 icon = Icons.Outlined.DateRange,
-                headline = "教学周次",
+                headline = t("教学周次", "Teaching weeks"),
                 supporting = course.weekText,
             )
 
             DetailListItem(
                 icon = Icons.Outlined.Apartment,
-                headline = "所属作息方案",
+                headline = t("所属作息方案", "Schedule"),
                 supporting = scheme.fullLabel,
             )
 
@@ -1563,16 +1591,26 @@ fun CourseDetailSheet(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 val removed = state.removedWeeksOf(course)
                 val targets = state.placementWeeksOf(course)
+                val separator = t("、", ", ")
                 val summary = when {
                     removed.isNotEmpty() && targets.isNotEmpty() ->
-                        "第 ${removed.joinToString("、")} 周的原课已调至第 ${targets.joinToString("、")} 周"
+                        t(
+                            "第 ${removed.joinToString(separator)} 周的原课已调至第 ${targets.joinToString(separator)} 周",
+                            "Moved the class from week ${removed.joinToString(separator)} to week ${targets.joinToString(separator)}",
+                        )
                     removed.isNotEmpty() ->
-                        "第 ${removed.joinToString("、")} 周的原课已调走"
+                        t(
+                            "第 ${removed.joinToString(separator)} 周的原课已调走",
+                            "Moved the class out of week ${removed.joinToString(separator)}",
+                        )
                     else ->
-                        "第 ${targets.joinToString("、")} 周的位置已调整"
+                        t(
+                            "第 ${targets.joinToString(separator)} 周的位置已调整",
+                            "Changed the position in week ${targets.joinToString(separator)}",
+                        )
                 }
                 Text(
-                    text = "$summary。",
+                    text = t("$summary。", "$summary."),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1589,7 +1627,7 @@ fun CourseDetailSheet(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("恢复默认位置")
+                    Text(t("恢复默认位置", "Reset position"))
                 }
             }
         }
@@ -1630,7 +1668,7 @@ private fun WeekJumpDialog(
         },
         title = {
             Text(
-                text = "调课 · 选择目标周次",
+                text = t("调课 · 选择目标周次", "Move class · choose a week"),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -1662,7 +1700,7 @@ private fun WeekJumpDialog(
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Text(
-                                    text = "第 $week 周",
+                                    text = t("第 $week 周", "Week $week"),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                     textAlign = TextAlign.Center,
@@ -1681,7 +1719,7 @@ private fun WeekJumpDialog(
             TextButton(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("取消") }
+            ) { Text(t("取消", "Cancel")) }
         },
         dismissButton = null,
     )
@@ -1748,7 +1786,11 @@ fun EmptySchedulePlaceholder(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = if (hasData) "当前学期暂无课表数据" else "尚未同步教务课表数据",
+            text = if (hasData) {
+                t("当前学期暂无课表数据", "No timetable data for this semester")
+            } else {
+                t("尚未同步教务课表数据", "Timetable has not been synced")
+            },
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
@@ -1756,7 +1798,11 @@ fun EmptySchedulePlaceholder(
         Spacer(Modifier.height(6.dp))
 
         Text(
-            text = if (hasData) "请轻触下方按钮同步最新教学计划" else "请验证统一身份凭据并同步教务系统课表",
+            text = if (hasData) {
+                t("请轻触下方按钮同步最新教学计划", "Tap the button below to sync the latest schedule")
+            } else {
+                t("请验证统一身份凭据并同步教务系统课表", "Sign in and sync the timetable from your academic system")
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -1774,7 +1820,7 @@ fun EmptySchedulePlaceholder(
                 modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text(if (refreshing) "正在同步教务系统…" else "同步课表数据")
+            Text(if (refreshing) t("正在同步教务系统…", "Syncing academic system…") else t("同步课表数据", "Sync timetable"))
         }
     }
 }

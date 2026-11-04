@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import com.irvingwu.huiniaotable.t
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -42,10 +43,10 @@ fun PickDateDialog(
                 } else {
                     onConfirm(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
                 }
-            }) { Text("确定") }
+            }) { Text(t("确定", "OK")) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(t("取消", "Cancel")) }
         },
     ) {
         DatePicker(state = state, title = { Text(title) })

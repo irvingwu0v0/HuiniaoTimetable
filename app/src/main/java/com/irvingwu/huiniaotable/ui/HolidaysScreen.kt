@@ -72,6 +72,7 @@ import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.HolidayDay
 import com.irvingwu.huiniaotable.data.MakeupGuesser
 import com.irvingwu.huiniaotable.data.WeekendMode
+import com.irvingwu.huiniaotable.t
 
 import java.time.Instant
 import java.time.LocalDate
@@ -158,7 +159,7 @@ fun HolidaysScreen(
     // 新增自定义假期日期选取器
     if (showOverrideDatePicker && overrideDate != null) {
         PickDateDialog(
-            title = "选取日期",
+            title = t("选取日期", "Select date"),
             current = overrideDate,
             onDismiss = {
                 overrideDate = null
@@ -207,13 +208,13 @@ fun HolidaysScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "返回",
+                            contentDescription = t("返回", "Back"),
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "节假日与调休编排",
+                        text = t("节假日与调休编排", "Holidays and makeup days"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -236,11 +237,11 @@ fun HolidaysScreen(
                 HolidaysCard {
                     HolidaysSettingRow(
                         icon = Icons.Outlined.ViewWeek,
-                        title = "周末列展示模式",
+                        title = t("周末列展示模式", "Weekend display"),
                         subtitle = when (state.weekendMode) {
-                            WeekendMode.Auto -> "按排课与调休智能显示周末"
-                            WeekendMode.Always -> "固定展示周一至周日全周期"
-                            WeekendMode.Hide -> "固定仅展示工作日"
+                            WeekendMode.Auto -> t("按排课与调休智能显示周末", "Show weekends when classes or makeup days require it")
+                            WeekendMode.Always -> t("固定展示周一至周日全周期", "Always show Monday through Sunday")
+                            WeekendMode.Hide -> t("固定仅展示工作日", "Always show weekdays only")
                         },
                     )
 
@@ -250,9 +251,9 @@ fun HolidaysScreen(
                             .padding(vertical = 4.dp),
                     ) {
                         val modes = listOf(
-                            WeekendMode.Auto to "智能判定",
-                            WeekendMode.Always to "完整周期",
-                            WeekendMode.Hide to "仅工作日",
+                            WeekendMode.Auto to t("智能判定", "Smart"),
+                            WeekendMode.Always to t("完整周期", "Full week"),
+                            WeekendMode.Hide to t("仅工作日", "Weekdays"),
                         )
                         modes.forEachIndexed { index, (mode, label) ->
                             SegmentedButton(
@@ -276,7 +277,7 @@ fun HolidaysScreen(
                     Box {
                         HolidaysSettingRow(
                             icon = Icons.Outlined.Place,
-                            title = "选择放假方案",
+                            title = t("选择放假方案", "Holiday schedule"),
                             subtitle = state.holidayRegion.displayName,
                             onClick = { showRegionDropdown = true },
                             trailing = {
@@ -291,7 +292,7 @@ fun HolidaysScreen(
                                     )
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "选择自治区放假安排",
+                                        contentDescription = t("选择自治区放假安排", "Select regional holiday data"),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -340,9 +341,13 @@ fun HolidaysScreen(
                     Box {
                         HolidaysSettingRow(
                             icon = Icons.Outlined.Dns,
-                            title = "数据同步源",
+                            title = t("数据同步源", "Data source"),
                             subtitle = when (state.holidaySource) {
-                                HolidaySource.CUSTOM -> if (state.holidayCustomMirror.isNotBlank()) "自定义镜像" else state.holidaySource.description
+                                HolidaySource.CUSTOM -> if (state.holidayCustomMirror.isNotBlank()) {
+                                    t("自定义镜像", "Custom mirror")
+                                } else {
+                                    state.holidaySource.description
+                                }
                                 else -> state.holidaySource.description
                             },
                             onClick = { showSourceDropdown = true },
@@ -358,7 +363,7 @@ fun HolidaysScreen(
                                     )
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "选择数据同步源",
+                                        contentDescription = t("选择数据同步源", "Select data source"),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -414,12 +419,14 @@ fun HolidaysScreen(
                     )
                     HolidaysSettingRow(
                         icon = Icons.Outlined.HolidayVillage,
-                        title = "法定节假日数据状态",
-                        subtitle = state.holidays?.let { "已加载 ${it.days.size} 个公历节假日及调休节点" } ?: "未加载法定假日数据",
+                        title = t("法定节假日数据状态", "Public holiday data"),
+                        subtitle = state.holidays?.let {
+                            t("已加载 ${it.days.size} 个公历节假日及调休节点", "${it.days.size} holiday and makeup days loaded")
+                        } ?: t("未加载法定假日数据", "No holiday data loaded"),
                     )
                     HolidaysSettingRow(
                         icon = Icons.Outlined.Sync,
-                        title = "节假日数据更新时间",
+                        title = t("节假日数据更新时间", "Holiday data updated"),
                         subtitle = formatTime(state.holidayFetchedAt),
                     )
                     FilledTonalButton(
@@ -430,7 +437,7 @@ fun HolidaysScreen(
                     ) {
                         Icon(imageVector = Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("同步最新法定放假及调休安排")
+                        Text(t("同步最新法定放假及调休安排", "Sync latest holidays and makeup days"))
                     }
                 }
             }
@@ -468,8 +475,12 @@ fun HolidaysScreen(
                                     color = MaterialTheme.colorScheme.secondaryContainer,
                                 ) {
                                     Text(
-                                        text = "放假 ${festival.offDays.size} 天" +
-                                            if (festival.makeupDays.isNotEmpty()) " · 调休 ${festival.makeupDays.size} 天" else "",
+                                        text = t(
+                                            "放假 ${festival.offDays.size} 天" +
+                                                if (festival.makeupDays.isNotEmpty()) " · 调休 ${festival.makeupDays.size} 天" else "",
+                                            "${festival.offDays.size} days off" +
+                                                if (festival.makeupDays.isNotEmpty()) " · ${festival.makeupDays.size} makeup days" else "",
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -487,7 +498,7 @@ fun HolidaysScreen(
                                     "${first.format(dateFormatter)} ~ ${last.format(dateFormatter)}"
                                 }
                                 Text(
-                                    text = "放假安排：$dateSpan（全天停课放假）",
+                                    text = t("放假安排：$dateSpan（全天停课放假）", "Holiday: $dateSpan (no classes)"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 2.dp),
@@ -501,7 +512,7 @@ fun HolidaysScreen(
                                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 )
                                 Text(
-                                    text = "调休补课安排（轻触可校准对应补课星期）：",
+                                    text = t("调休补课安排（轻触可校准对应补课星期）：", "Makeup classes (tap to choose the weekday):"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -514,8 +525,11 @@ fun HolidaysScreen(
                                         icon = Icons.Outlined.EditCalendar,
                                         title = "${day.date.format(dateFormatter)} ($weekday)",
                                         subtitle = when (currentTarget) {
-                                            null, 0 -> "调休上班 · 不执行补课"
-                                            else -> "调休补课 · 执行 ${MakeupGuesser.weekdayLabel(currentTarget)} 课表"
+                                            null, 0 -> t("调休上班 · 不执行补课", "Workday · no makeup classes")
+                                            else -> t(
+                                                "调休补课 · 执行 ${MakeupGuesser.weekdayLabel(currentTarget)} 课表",
+                                                "Makeup classes · follow the ${MakeupGuesser.weekdayLabel(currentTarget)} timetable",
+                                            )
                                         },
                                         onClick = { activeMakeupDay = day },
                                         trailing = {
@@ -530,8 +544,11 @@ fun HolidaysScreen(
                                                 ) {
                                                     Text(
                                                         text = when (currentTarget) {
-                                                            null, 0 -> "不补课"
-                                                            else -> "补${MakeupGuesser.weekdayLabel(currentTarget)}"
+                                                            null, 0 -> t("不补课", "No makeup")
+                                                            else -> t(
+                                                                "补${MakeupGuesser.weekdayLabel(currentTarget)}",
+                                                                "Makeup: ${MakeupGuesser.weekdayLabel(currentTarget)}",
+                                                            )
                                                         },
                                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                                         fontWeight = FontWeight.Medium,
@@ -563,7 +580,7 @@ fun HolidaysScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "校级调休或个性化放假：",
+                            text = t("校级调休或个性化放假：", "School-specific holidays or makeup days:"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -575,14 +592,17 @@ fun HolidaysScreen(
                         ) {
                             Icon(imageVector = Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("添加自定义安排")
+                            Text(t("添加自定义安排", "Add custom day"))
                         }
                     }
 
                     if (state.holidayOverrides.isEmpty()) {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "暂无自定义节假日，系统完全依据法定公共假期运行。",
+                            text = t(
+                                "暂无自定义节假日，系统完全依据法定公共假期运行。",
+                                "No custom holidays. The app follows the official public holiday schedule.",
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                         )
@@ -610,7 +630,11 @@ fun HolidaysScreen(
                                         fontWeight = FontWeight.Medium,
                                     )
                                     Text(
-                                        text = if (item.isOffDay) "法定/校级休假 (课程停排)" else "调休教学日",
+                                        text = if (item.isOffDay) {
+                                            t("法定/校级休假 (课程停排)", "Holiday (no classes)")
+                                        } else {
+                                            t("调休教学日", "Makeup school day")
+                                        },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = if (item.isOffDay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
                                     )
@@ -618,7 +642,7 @@ fun HolidaysScreen(
                                 IconButton(onClick = { onRemoveHolidayOverride(item.date) }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Close,
-                                        contentDescription = "删除",
+                                        contentDescription = t("删除", "Delete"),
                                         modifier = Modifier.size(18.dp),
                                     )
                                 }
@@ -644,7 +668,7 @@ private fun CustomHolidayDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "配置日期：${date.format(dateFormatter)}",
+                text = t("配置日期：${date.format(dateFormatter)}", "Date: ${date.format(dateFormatter)}"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -654,14 +678,14 @@ private fun CustomHolidayDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("节假日或调休事由") },
-                    placeholder = { Text("如：校庆日 / 运动会调休") },
+                    label = { Text(t("节假日或调休事由", "Holiday or makeup reason")) },
+                    placeholder = { Text(t("如：校庆日 / 运动会调休", "e.g. Anniversary / Sports day makeup")) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(
-                    text = "日程属性设定：",
+                    text = t("日程属性设定：", "Day type:"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -670,25 +694,25 @@ private fun CustomHolidayDialog(
                     FilterChip(
                         selected = isOffDay,
                         onClick = { isOffDay = true },
-                        label = { Text("休假 (停排课程)") },
+                        label = { Text(t("休假 (停排课程)", "Holiday (no classes)")) },
                     )
                     FilterChip(
                         selected = !isOffDay,
                         onClick = { isOffDay = false },
-                        label = { Text("调休教学日") },
+                        label = { Text(t("调休教学日", "Makeup school day")) },
                     )
                 }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name.ifBlank { "自定义安排" }, isOffDay) },
+                onClick = { onConfirm(name.ifBlank { t("自定义安排", "Custom day") }, isOffDay) },
             ) {
-                Text("保存配置")
+                Text(t("保存配置", "Save"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(t("取消", "Cancel")) }
         },
     )
 }
@@ -791,7 +815,7 @@ private fun CustomMirrorDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "自定义数据源 / ghproxy",
+                text = t("自定义数据源 / ghproxy", "Custom source / ghproxy"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -799,14 +823,17 @@ private fun CustomMirrorDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "支持输入自建 ghproxy 代理前缀或完整的 holiday-cn 镜像仓库根地址：",
+                    text = t(
+                        "支持输入自建 ghproxy 代理前缀或完整的 holiday-cn 镜像仓库根地址：",
+                        "Enter a self-hosted ghproxy prefix or the root URL of a holiday-cn mirror:",
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("镜像地址或代理 URL") },
+                    label = { Text(t("镜像地址或代理 URL", "Mirror or proxy URL")) },
                     placeholder = { Text("https://ghproxy.net/https://raw.githubusercontent.com/irvingwu0v0/holiday-cn/master") },
                     singleLine = false,
                     modifier = Modifier.fillMaxWidth(),
@@ -821,17 +848,17 @@ private fun CustomMirrorDialog(
                     }
                 },
             ) {
-                Text("保存并同步")
+                Text(t("保存并同步", "Save and sync"))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(t("取消", "Cancel")) }
         },
     )
 }
 
 private fun formatTime(epochMillis: Long): String {
-    if (epochMillis <= 0L) return "尚未执行同步"
+    if (epochMillis <= 0L) return t("尚未执行同步", "Never synced")
     return Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .format(timeFormatter)
@@ -848,8 +875,8 @@ private fun MakeupDayDialog(
     onDismiss: () -> Unit,
 ) {
     val weekdays = listOf(
-        1 to "周一", 2 to "周二", 3 to "周三", 4 to "周四",
-        5 to "周五", 6 to "周六", 7 to "周日",
+        1 to t("周一", "Mon"), 2 to t("周二", "Tue"), 3 to t("周三", "Wed"), 4 to t("周四", "Thu"),
+        5 to t("周五", "Fri"), 6 to t("周六", "Sat"), 7 to t("周日", "Sun"),
     )
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -863,7 +890,7 @@ private fun MakeupDayDialog(
         },
         title = {
             Text(
-                text = "${date.format(dateFormatter)} 调休安排",
+                text = t("${date.format(dateFormatter)} 调休安排", "${date.format(dateFormatter)} makeup arrangement"),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -874,7 +901,7 @@ private fun MakeupDayDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    text = "选择对应补课星期：",
+                    text = t("选择对应补课星期：", "Choose the weekday to follow:"),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -943,13 +970,13 @@ private fun MakeupDayDialog(
                         onClick = onRest,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(if (isRest) "当前：休息" else "休息")
+                        Text(if (isRest) t("当前：休息", "Current: day off") else t("休息", "Day off"))
                     }
                     FilledTonalButton(
                         onClick = onRestore,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("恢复系统推算")
+                        Text(t("恢复系统推算", "Restore automatic"))
                     }
                 }
             }
@@ -957,7 +984,7 @@ private fun MakeupDayDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text(t("关闭", "Close"))
             }
         },
     )

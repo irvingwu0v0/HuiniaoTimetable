@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.HolidayRegion
 import com.irvingwu.huiniaotable.data.CalendarSyncManager
@@ -69,13 +70,20 @@ private enum class SubScreen {
 }
 
 private enum class MainTab(
-    val label: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
 ) {
-    Schedule("课表", Icons.Filled.DateRange, Icons.Outlined.DateRange),
-    Courses("课程", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
-    Settings("设置", Icons.Filled.Settings, Icons.Outlined.Settings),
+    Schedule(Icons.Filled.DateRange, Icons.Outlined.DateRange),
+    Courses(Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
+    Settings(Icons.Filled.Settings, Icons.Outlined.Settings),
+    ;
+
+    val label: String
+        get() = when (this) {
+            Schedule -> t("课表", "Timetable")
+            Courses -> t("课程", "Courses")
+            Settings -> t("设置", "Settings")
+        }
 }
 
 @Composable
@@ -151,17 +159,25 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
         val granted = permissions[Manifest.permission.WRITE_CALENDAR] == true
         if (granted) {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("正在将全学期课程写入系统日历日程…")
+                snackbarHostState.showSnackbar(
+                    t("正在将全学期课程写入系统日历日程…", "Adding this semester's classes to the system calendar…"),
+                )
                 val result = CalendarSyncManager.syncToSystemCalendar(context, state)
                 result.onSuccess { count ->
-                    snackbarHostState.showSnackbar("已成功将 $count 节课程同步至手机系统日程！")
+                    snackbarHostState.showSnackbar(
+                        t("已成功将 $count 节课程同步至手机系统日程！", "Synced $count class sessions to the calendar."),
+                    )
                 }.onFailure { err ->
-                    snackbarHostState.showSnackbar("写入失败：${err.message ?: "日历写入异常"}")
+                    snackbarHostState.showSnackbar(
+                        t("写入失败：${err.message ?: "日历写入异常"}", "Sync failed: ${err.message ?: "Calendar error"}"),
+                    )
                 }
             }
         } else {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("同步失败：未授予日历写入权限")
+                snackbarHostState.showSnackbar(
+                    t("同步失败：未授予日历写入权限", "Sync failed: calendar write permission not granted"),
+                )
             }
         }
     }
@@ -174,7 +190,9 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
             ClassNotifier.refresh(context)
         } else {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("未授予通知权限，无法显示上课提醒")
+                snackbarHostState.showSnackbar(
+                    t("未授予通知权限，无法显示上课提醒", "Notification permission is required for class reminders"),
+                )
             }
         }
     }
@@ -205,12 +223,18 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
     val executeCalendarSync: () -> Unit = {
         if (CalendarSyncManager.hasCalendarPermission(context)) {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("正在将全学期课程写入系统日历日程…")
+                snackbarHostState.showSnackbar(
+                    t("正在将全学期课程写入系统日历日程…", "Adding this semester's classes to the system calendar…"),
+                )
                 val result = CalendarSyncManager.syncToSystemCalendar(context, state)
                 result.onSuccess { count ->
-                    snackbarHostState.showSnackbar("已成功将 $count 节课程同步至手机系统日程！")
+                    snackbarHostState.showSnackbar(
+                        t("已成功将 $count 节课程同步至手机系统日程！", "Synced $count class sessions to the calendar."),
+                    )
                 }.onFailure { err ->
-                    snackbarHostState.showSnackbar("写入失败：${err.message ?: "日历写入异常"}")
+                    snackbarHostState.showSnackbar(
+                        t("写入失败：${err.message ?: "日历写入异常"}", "Sync failed: ${err.message ?: "Calendar error"}"),
+                    )
                 }
             }
         } else {
@@ -226,12 +250,18 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
     val executeCalendarClear: () -> Unit = {
         if (CalendarSyncManager.hasCalendarPermission(context)) {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("正在从系统日历中清理已导入日程…")
+                snackbarHostState.showSnackbar(
+                    t("正在从系统日历中清理已导入日程…", "Removing imported classes from the system calendar…"),
+                )
                 val result = CalendarSyncManager.clearAllSyncedEvents(context)
                 result.onSuccess { count ->
-                    snackbarHostState.showSnackbar("已成功从系统日历清除 $count 条课程日程！")
+                    snackbarHostState.showSnackbar(
+                        t("已成功从系统日历清除 $count 条课程日程！", "Removed $count class events from the calendar."),
+                    )
                 }.onFailure { err ->
-                    snackbarHostState.showSnackbar("清理失败：${err.message ?: "日历清理异常"}")
+                    snackbarHostState.showSnackbar(
+                        t("清理失败：${err.message ?: "日历清理异常"}", "Cleanup failed: ${err.message ?: "Calendar error"}"),
+                    )
                 }
             }
         } else {
@@ -299,7 +329,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.EditCalendar,
-                                contentDescription = "一键全部添加到日程",
+                                contentDescription = t("一键全部添加到日程", "Add all classes to calendar"),
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                         }
@@ -310,15 +340,17 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                         MainTab.Schedule -> {
                             Column {
                                 Text(
-                                    text = "课程作息表",
+                                    text = t("课程作息表", "Class Timetable"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
                                     text = buildString {
                                         if (state.term.isNotBlank()) append("${state.term} · ")
-                                        append("第 ${state.selectedWeek} 教学周")
-                                        if (state.selectedWeek == state.currentWeek) append(" (当前周)")
+                                        append(t("第 ${state.selectedWeek} 教学周", "Week ${state.selectedWeek}"))
+                                        if (state.selectedWeek == state.currentWeek) {
+                                            append(t(" (当前周)", " (Current)"))
+                                        }
                                     },
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -329,12 +361,15 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                         MainTab.Courses -> {
                             Column {
                                 Text(
-                                    text = "学期课程总览",
+                                    text = t("学期课程总览", "Semester Courses"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
-                                    text = "共检索到 ${state.schedule?.distinctCourses?.size ?: 0} 门教学课程",
+                                    text = t(
+                                        "共检索到 ${state.schedule?.distinctCourses?.size ?: 0} 门教学课程",
+                                        "${state.schedule?.distinctCourses?.size ?: 0} courses found",
+                                    ),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -343,7 +378,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
 
                         MainTab.Settings -> {
                             Text(
-                                text = "系统设置",
+                                text = t("系统设置", "Settings"),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -367,7 +402,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                             IconButton(onClick = { TimetableRepository.refresh() }) {
                                 Icon(
                                     imageVector = Icons.Outlined.Refresh,
-                                    contentDescription = "同步教务数据",
+                                    contentDescription = t("同步教务数据", "Sync academic data"),
                                 )
                             }
                         }
@@ -437,9 +472,15 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                             if (sourceWeek != null) pendingPlacement = null
                             coroutineScope.launch {
                                 val tip = if (sourceWeek != null && fromWeek != week) {
-                                    "已把第 $fromWeek 周的《${course.name}》调到第 $week 周"
+                                    t(
+                                        "已把第 $fromWeek 周的《${course.name}》调到第 $week 周",
+                                        "Moved ${course.name} from week $fromWeek to week $week",
+                                    )
                                 } else {
-                                    "已把《${course.name}》放到第 $week 周"
+                                    t(
+                                        "已把《${course.name}》放到第 $week 周",
+                                        "Placed ${course.name} in week $week",
+                                    )
                                 }
                                 snackbarHostState.showSnackbar(tip)
                             }

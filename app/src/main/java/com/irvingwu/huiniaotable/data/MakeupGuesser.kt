@@ -117,5 +117,5 @@ object MakeupGuesser {
 
     /** 「周三」这样的短标签。 */
     fun weekdayLabel(dayOfWeek: Int): String =
-        WEEKDAY_NAMES.getOrNull(dayOfWeek - 1)?.removePrefix("星期")?.let { "周$it" } ?: "—"
+        weekdayCompactLabel(dayOfWeek)
 }

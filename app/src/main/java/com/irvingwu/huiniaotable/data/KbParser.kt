@@ -1,5 +1,6 @@
 package com.irvingwu.huiniaotable.data
 
+import com.irvingwu.huiniaotable.t
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -50,11 +51,12 @@ object KbParser {
         val table = doc.selectFirst("table#timetable")
             ?: doc.selectFirst("table#kbtable")
             ?: doc.selectFirst("table")
-            ?: throw ParseException("页面里没有找到课表表格")
+            ?: throw ParseException(t("页面里没有找到课表表格", "No timetable table was found on the page"))
 
         val trs = table.select("tr")
         // jsoup 的 Elements.first() 是可空覆盖，这里显式处理空表。
-        val headerRow = trs.firstOrNull() ?: throw ParseException("课表表格是空的")
+        val headerRow = trs.firstOrNull()
+            ?: throw ParseException(t("课表表格是空的", "The timetable table is empty"))
 
         val colToDay = buildDayColumns(headerRow)
 
@@ -67,7 +69,13 @@ object KbParser {
             if (head.tagName() != "th") continue
             val slots = parseRowSlots(head.text()) ?: continue
             val rowIndex = slotRows.size
-            slotRows += SlotRow(head.text().trim().ifBlank { "第${slots.first}-${slots.second}节" }, slots.first, slots.second)
+            slotRows += SlotRow(
+                head.text().trim().ifBlank {
+                    t("第${slots.first}-${slots.second}节", "Periods ${slots.first}–${slots.second}")
+                },
+                slots.first,
+                slots.second,
+            )
 
             var column = 0
             for (cell in cells) {
@@ -84,7 +92,12 @@ object KbParser {
 
         val unscheduled = parseUnscheduled(doc)
         if (courses.isEmpty() && unscheduled.isEmpty() && !html.contains("kbcontent")) {
-            throw ParseException("课表页面结构无法识别（可能是登录状态失效或页面已改版）")
+            throw ParseException(
+                t(
+                    "课表页面结构无法识别（可能是登录状态失效或页面已改版）",
+                    "The timetable page could not be parsed. Your session may have expired or the page changed.",
+                ),
+            )
         }
 
         val (maxWeek, lastTeachingWeek) = weekRange(doc, courses)

@@ -77,6 +77,7 @@ import com.irvingwu.huiniaotable.data.Campus
 import com.irvingwu.huiniaotable.data.CampusBuilding
 import com.irvingwu.huiniaotable.data.ClassTimes
 import com.irvingwu.huiniaotable.data.ClockTime
+import com.irvingwu.huiniaotable.t
 
 /**
  * 作息时间与校区楼宇独立配置页面。
@@ -151,14 +152,14 @@ fun ClassTimesScreen(
     var activeBuildingKey by remember { mutableStateOf<String?>(null) }
 
     val groupedSchemes = remember(schemes) {
-        schemes.groupBy { it.campus.ifBlank { "主校区" } }
+        schemes.groupBy { it.campus.ifBlank { t("主校区", "Main Campus") } }
     }
 
     // 默认作息方案单选对话框（选项下面不要有小字）
     if (showDefaultSchemeDialog) {
         GroupedSingleChoiceDialog(
             icon = Icons.Outlined.Schedule,
-            title = "未指定楼宇默认作息方案",
+            title = t("未指定楼宇默认作息方案", "Default schedule for unmatched buildings"),
             groupedItems = groupedSchemes,
             selectedItem = state.timeTable,
             itemTitle = { it.label },
@@ -180,8 +181,11 @@ fun ClassTimesScreen(
             add(
                 LunchChoice(
                     slot = 0,
-                    title = "默认",
-                    subtitle = "第 $defaultGapSlot 节课后 相差 $defaultGapMinutes 分钟",
+                    title = t("默认", "Default"),
+                    subtitle = t(
+                        "第 $defaultGapSlot 节课后 相差 $defaultGapMinutes 分钟",
+                        "$defaultGapMinutes min after period $defaultGapSlot",
+                    ),
                 ),
             )
             for (s in 1 until activeSchemePeriods.size) {
@@ -191,8 +195,8 @@ fun ClassTimesScreen(
                 add(
                     LunchChoice(
                         slot = s,
-                        title = "第 $s 节后",
-                        subtitle = "与下一节相差 $gap 分钟",
+                        title = t("第 $s 节后", "After period $s"),
+                        subtitle = t("与下一节相差 $gap 分钟", "$gap min until the next period"),
                     ),
                 )
             }
@@ -201,7 +205,7 @@ fun ClassTimesScreen(
 
         SingleChoiceDialog(
             icon = Icons.Outlined.WbSunny,
-            title = "选择中午午休时段",
+            title = t("选择中午午休时段", "Select lunch break"),
             items = lunchChoices,
             selectedItem = currentChoice,
             itemTitle = { it.title },
@@ -209,9 +213,23 @@ fun ClassTimesScreen(
             onItemSelected = { choice ->
                 onSelectLunchBreakSlot(choice.slot)
                 if (choice.slot == 0) {
-                    Toast.makeText(context, "已恢复为默认午休时段（第 $defaultGapSlot 节后）", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        t(
+                            "已恢复为默认午休时段（第 $defaultGapSlot 节后）",
+                            "Default lunch break restored (after period $defaultGapSlot)",
+                        ),
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 } else {
-                    Toast.makeText(context, "午休时段已设为第 ${choice.slot} 节课后", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        t(
+                            "午休时段已设为第 ${choice.slot} 节课后",
+                            "Lunch break set after period ${choice.slot}",
+                        ),
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             },
             onDismissRequest = { showLunchBreakDialog = false },
@@ -222,7 +240,7 @@ fun ClassTimesScreen(
     activeBuildingKey?.let { buildingKey ->
         GroupedSingleChoiceDialog(
             icon = Icons.Outlined.Domain,
-            title = "配置「$buildingKey」作息方案",
+            title = t("配置「$buildingKey」作息方案", "Schedule for $buildingKey"),
             groupedItems = groupedSchemes,
             selectedItem = state.schemeForKey(buildingKey),
             itemTitle = { it.label },
@@ -238,10 +256,10 @@ fun ClassTimesScreen(
             onConfirm = { json ->
                 val success = onImportConfig(json)
                 if (success) {
-                    Toast.makeText(context, "作息配置已成功导入", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, t("作息配置已成功导入", "Schedule imported"), Toast.LENGTH_SHORT).show()
                     showImportDialog = false
                 } else {
-                    Toast.makeText(context, "导入失败：JSON 格式不正确", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, t("导入失败：JSON 格式不正确", "Import failed: invalid JSON"), Toast.LENGTH_LONG).show()
                 }
             },
         )
@@ -254,7 +272,7 @@ fun ClassTimesScreen(
             onDismissRequest = { showExportDialog = false },
             title = {
                 Text(
-                    text = "导出作息配置 JSON",
+                    text = t("导出作息配置 JSON", "Export schedule JSON"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -262,7 +280,7 @@ fun ClassTimesScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "以下为当前生效作息规范的完整结构化定义：",
+                        text = t("以下为当前生效作息规范的完整结构化定义：", "The complete active schedule definition:"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -281,18 +299,18 @@ fun ClassTimesScreen(
                 Button(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(exportedJson))
-                        Toast.makeText(context, "已将配置复制到剪贴板", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, t("已将配置复制到剪贴板", "Configuration copied"), Toast.LENGTH_SHORT).show()
                         showExportDialog = false
                     },
                 ) {
                     Icon(imageVector = Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("复制到剪贴板")
+                    Text(t("复制到剪贴板", "Copy to clipboard"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExportDialog = false }) {
-                    Text("关闭")
+                    Text(t("关闭", "Close"))
                 }
             },
         )
@@ -305,20 +323,20 @@ fun ClassTimesScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "返回",
+                            contentDescription = t("返回", "Back"),
                         )
                     }
                 },
                 title = {
                     Text(
-                        text = "作息时间与校区楼宇",
+                        text = t("作息时间与校区楼宇", "Schedules, campuses and buildings"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
                 actions = {
                     IconButton(onClick = { isCreatingScheme = true }) {
-                        Icon(imageVector = Icons.Outlined.Add, contentDescription = "新建方案")
+                        Icon(imageVector = Icons.Outlined.Add, contentDescription = t("新建方案", "New schedule"))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -355,7 +373,10 @@ fun ClassTimesScreen(
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Text(
-                                text = "包含 ${schemes.size} 套楼宇方案 · 基准校区：${state.campus.label}",
+                                text = t(
+                                    "包含 ${schemes.size} 套楼宇方案 · 基准校区：${state.campus.label}",
+                                    "${schemes.size} building schedules · Base campus: ${state.campus.label}",
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -375,7 +396,7 @@ fun ClassTimesScreen(
                         ) {
                             Icon(imageVector = Icons.Outlined.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("导入 JSON")
+                            Text(t("导入 JSON", "Import JSON"))
                         }
                         OutlinedButton(
                             onClick = { showExportDialog = true },
@@ -383,7 +404,7 @@ fun ClassTimesScreen(
                         ) {
                             Icon(imageVector = Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("导出 JSON")
+                            Text(t("导出 JSON", "Export JSON"))
                         }
                     }
 
@@ -397,18 +418,18 @@ fun ClassTimesScreen(
                         ) {
                             Icon(imageVector = Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("新建作息方案")
+                            Text(t("新建作息方案", "New schedule"))
                         }
                         FilledTonalButton(
                             onClick = {
                                 onResetConfig()
-                                Toast.makeText(context, "已恢复标准作息", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, t("已恢复标准作息", "Standard schedule restored"), Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.weight(1f),
                         ) {
                             Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("恢复标准作息")
+                            Text(t("恢复标准作息", "Restore standard schedule"))
                         }
                     }
                 }
@@ -423,14 +444,14 @@ fun ClassTimesScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "图形化节次起止时间",
+                            text = t("图形化节次起止时间", "Period start and end times"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                         TextButton(onClick = { editingScheme = activeScheme }) {
                             Icon(imageVector = Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("编辑此方案")
+                            Text(t("编辑此方案", "Edit schedule"))
                         }
                     }
 
@@ -481,7 +502,7 @@ fun ClassTimesScreen(
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "第 $slot 节",
+                                    text = t("第 $slot 节", "Period $slot"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -494,7 +515,7 @@ fun ClassTimesScreen(
 
                             Icon(
                                 imageVector = Icons.Outlined.Edit,
-                                contentDescription = "修改时间",
+                                contentDescription = t("修改时间", "Change time"),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp),
                             )
@@ -520,7 +541,7 @@ fun ClassTimesScreen(
                                         modifier = Modifier.size(14.dp),
                                     )
                                     Text(
-                                        text = "中午午休时段（第 $slot 节后开始）",
+                                        text = t("中午午休时段（第 $slot 节后开始）", "Lunch break (after period $slot)"),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         fontWeight = FontWeight.Medium,
@@ -543,8 +564,11 @@ fun ClassTimesScreen(
                 ClassTimesCard {
                     ClassTimesSettingRow(
                         icon = Icons.Outlined.Apartment,
-                        title = "默认基准校区",
-                        subtitle = "未匹配到特定教学楼时，按该校区默认时段核算",
+                        title = t("默认基准校区", "Default campus"),
+                        subtitle = t(
+                            "未匹配到特定教学楼时，按该校区默认时段核算",
+                            "Classes in unmatched buildings use this campus's schedule",
+                        ),
                     )
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
@@ -568,7 +592,7 @@ fun ClassTimesScreen(
 
                     ClassTimesSettingRow(
                         icon = Icons.Outlined.Schedule,
-                        title = "未指定楼宇默认作息",
+                        title = t("未指定楼宇默认作息", "Default schedule for unmatched buildings"),
                         subtitle = "${state.timeTable.label} (${state.timeTable.campus})",
                         onClick = { showDefaultSchemeDialog = true },
                         trailing = {
@@ -586,8 +610,8 @@ fun ClassTimesScreen(
 
                     ClassTimesSettingRow(
                         icon = Icons.Outlined.WbSunny,
-                        title = "中午午休开始时段",
-                        subtitle = "第 ${state.effectiveLunchBreakSlot} 节后",
+                        title = t("中午午休开始时段", "Lunch break start"),
+                        subtitle = t("第 ${state.effectiveLunchBreakSlot} 节后", "After period ${state.effectiveLunchBreakSlot}"),
                         onClick = { showLunchBreakDialog = true },
                         trailing = {
                             Icon(
@@ -606,7 +630,7 @@ fun ClassTimesScreen(
                 item {
                     ClassTimesCard {
                         Text(
-                            text = "楼宇作息映射",
+                            text = t("楼宇作息映射", "Building schedule mapping"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary,
@@ -674,7 +698,9 @@ fun SchemeEditScreen(
     val schemeId = remember { initialScheme?.id ?: ClassTimes.generateNewSchemeId() }
 
     var label by remember { mutableStateOf(initialScheme?.label ?: "") }
-    var campus by remember { mutableStateOf(initialScheme?.campus ?: (allCampuses.firstOrNull() ?: "主校区")) }
+    var campus by remember {
+        mutableStateOf(initialScheme?.campus ?: (allCampuses.firstOrNull() ?: t("主校区", "Main Campus")))
+    }
 
     val initialPeriods = remember(initialScheme) {
         val list = if (initialScheme != null) {
@@ -714,15 +740,21 @@ fun SchemeEditScreen(
     }
 
     val saveAction = {
-        val trimmedLabel = label.trim().ifBlank { if (isNew) "新方案" else "默认作息" }
-        val trimmedCampus = campus.trim().ifBlank { "主校区" }
+        val trimmedLabel = label.trim().ifBlank {
+            if (isNew) t("新方案", "New schedule") else t("默认作息", "Default schedule")
+        }
+        val trimmedCampus = campus.trim().ifBlank { t("主校区", "Main Campus") }
         val anyInvalid = periodTimes.any { (s, e) -> !timeRegex.matches(s.trim()) || !timeRegex.matches(e.trim()) }
         if (anyInvalid) {
-            Toast.makeText(context, "请确保所有节次时间格式为 HH:mm（如 08:00）", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                t("请确保所有节次时间格式为 HH:mm（如 08:00）", "Use HH:mm for every period time (for example 08:00)"),
+                Toast.LENGTH_SHORT,
+            ).show()
         } else {
             val clockTimes = periodTimes.map { (s, e) -> ClockTime(s.trim(), e.trim()) }
             onSave(schemeId, trimmedLabel, trimmedCampus, clockTimes, isNew && ClassTimes.allBuildings.isEmpty())
-            Toast.makeText(context, "作息方案已保存", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, t("作息方案已保存", "Schedule saved"), Toast.LENGTH_SHORT).show()
             onBack()
         }
     }
@@ -732,19 +764,22 @@ fun SchemeEditScreen(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "返回")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = t("返回", "Back"),
+                        )
                     }
                 },
                 title = {
                     Text(
-                        text = if (isNew) "新建作息方案" else "编辑作息方案",
+                        text = if (isNew) t("新建作息方案", "New schedule") else t("编辑作息方案", "Edit schedule"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
                 },
                 actions = {
                     TextButton(onClick = saveAction) {
-                        Text("保存", fontWeight = FontWeight.Bold)
+                        Text(t("保存", "Save"), fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -762,15 +797,15 @@ fun SchemeEditScreen(
             item {
                 ClassTimesCard {
                     Text(
-                        text = "方案与校区基础设置",
+                        text = t("方案与校区基础设置", "Schedule and campus"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     OutlinedTextField(
                         value = label,
                         onValueChange = { label = it },
-                        label = { Text("方案 / 楼宇名称") },
-                        placeholder = { Text("例如：第一教学楼、实验楼、图书馆") },
+                        label = { Text(t("方案 / 楼宇名称", "Schedule / building name")) },
+                        placeholder = { Text(t("例如：第一教学楼、实验楼、图书馆", "e.g. Teaching Building 1, Lab, Library")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
@@ -778,8 +813,8 @@ fun SchemeEditScreen(
                     OutlinedTextField(
                         value = campus,
                         onValueChange = { campus = it },
-                        label = { Text("所属校区") },
-                        placeholder = { Text("例如：主校区、东校区、南校区") },
+                        label = { Text(t("所属校区", "Campus")) },
+                        placeholder = { Text(t("例如：主校区、东校区、南校区", "e.g. Main Campus, East Campus, South Campus")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
@@ -807,7 +842,7 @@ fun SchemeEditScreen(
             item {
                 ClassTimesCard {
                     Text(
-                        text = "各节次起止时间",
+                        text = t("各节次起止时间", "Period start and end times"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -838,7 +873,7 @@ fun SchemeEditScreen(
                                     }
                                 }
                                 Text(
-                                    text = "第 $slot 节",
+                                    text = t("第 $slot 节", "Period $slot"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -856,14 +891,14 @@ fun SchemeEditScreen(
                                         updated[idx] = newS to updated[idx].second
                                         periodTimes = updated
                                     },
-                                    label = { Text("开始") },
+                                    label = { Text(t("开始", "Start")) },
                                     singleLine = true,
                                     modifier = Modifier.weight(1f),
                                     trailingIcon = {
                                         IconButton(onClick = { onPickTime(idx, true) }) {
                                             Icon(
                                                 imageVector = Icons.Outlined.Schedule,
-                                                contentDescription = "选择第 $slot 节开始时间",
+                                                contentDescription = t("选择第 $slot 节开始时间", "Select start time for period $slot"),
                                                 tint = MaterialTheme.colorScheme.primary,
                                             )
                                         }
@@ -877,14 +912,14 @@ fun SchemeEditScreen(
                                         updated[idx] = updated[idx].first to newE
                                         periodTimes = updated
                                     },
-                                    label = { Text("结束") },
+                                    label = { Text(t("结束", "End")) },
                                     singleLine = true,
                                     modifier = Modifier.weight(1f),
                                     trailingIcon = {
                                         IconButton(onClick = { onPickTime(idx, false) }) {
                                             Icon(
                                                 imageVector = Icons.Outlined.Schedule,
-                                                contentDescription = "选择第 $slot 节结束时间",
+                                                contentDescription = t("选择第 $slot 节结束时间", "Select end time for period $slot"),
                                                 tint = MaterialTheme.colorScheme.primary,
                                             )
                                         }
@@ -909,7 +944,7 @@ fun SchemeEditScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                 ) {
-                    Text("保存作息方案")
+                    Text(t("保存作息方案", "Save schedule"))
                 }
             }
 
@@ -918,13 +953,13 @@ fun SchemeEditScreen(
                     OutlinedButton(
                         onClick = {
                             onDelete(schemeId)
-                            Toast.makeText(context, "已删除作息方案", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, t("已删除作息方案", "Schedule deleted"), Toast.LENGTH_SHORT).show()
                             onBack()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     ) {
-                        Text("删除此作息方案")
+                        Text(t("删除此作息方案", "Delete this schedule"))
                     }
                 }
             }
@@ -944,7 +979,7 @@ private fun ImportJsonDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "导入作息配置 JSON",
+                text = t("导入作息配置 JSON", "Import schedule JSON"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -952,7 +987,10 @@ private fun ImportJsonDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "粘贴包含 schemes 及 periods 的作息规范 JSON，系统将动态更新各校区时段与楼栋匹配规则：",
+                    text = t(
+                        "粘贴包含 schemes 及 periods 的作息规范 JSON，系统将动态更新各校区时段与楼栋匹配规则：",
+                        "Paste schedule JSON containing schemes and periods to update campus times and building matching:",
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -967,14 +1005,14 @@ private fun ImportJsonDialog(
                 ) {
                     Icon(imageVector = Icons.Outlined.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("从剪贴板粘贴")
+                    Text(t("从剪贴板粘贴", "Paste from clipboard"))
                 }
 
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("JSON 内容") },
-                    placeholder = { Text("{\\n  \"name\": \"自定义高校作息表\",\\n  \"schemes\": [...]\\n}") },
+                    label = { Text(t("JSON 内容", "JSON")) },
+                    placeholder = { Text("{\\n  \"name\": \"Custom University Schedule\",\\n  \"schemes\": [...]\\n}") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
@@ -987,12 +1025,12 @@ private fun ImportJsonDialog(
                 onClick = { onConfirm(text.trim()) },
                 enabled = text.isNotBlank(),
             ) {
-                Text("解析并应用")
+                Text(t("解析并应用", "Parse and apply"))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(t("取消", "Cancel"))
             }
         },
     )

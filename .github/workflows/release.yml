@@ -41,8 +41,8 @@ jobs:
       - name: Prepare APK Asset & Metadata
         id: meta
         run: |
-          # 1. 提取版本号 (1.X，如 1.1)
-          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.1")
+          # 1. 提取版本号 (1.X，如 1.2)
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.2")
 
           # 2. 获取短提交号 (commit 号)
           COMMIT_SHORT=$(git rev-parse --short HEAD)

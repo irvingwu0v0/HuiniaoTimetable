@@ -14,6 +14,7 @@
 ### 1. Material You 动态设计与课程配色
 - **动态取色与自适应**：原生适配 Android 12+ Monet 动态色彩引擎，提供亮色与深色主题无缝切换；同时支持关闭动态色彩，采用灰鸟专属基准色盘。
 - **一课一色 (Per-Course Hue)**：同一门课程在课表、桌面小组件、日程同步与通知中保持全局统一的色相；基于 Material 3 色调板，亮色下容器色调约为 Tone 90 / 文字 Tone 10，深色下为 Tone 30 / 文字 Tone 90，确保通过 WCAG AA 对比度标准。
+- **中英双语**：界面、通知、桌面小组件和系统日历描述随系统语言切换；英文应用名为 **Huiniao**，并支持 Android 13+ 按应用设置语言。
 
 ### 2. 上课实时通知（Live Updates）与课前提醒
 - **智能课前提醒**：开课前 15 分钟触发通知提醒，展示课程名称、授课教师、教室与上课时间。
@@ -79,7 +80,7 @@ export JAVA_HOME=/opt/android-studio/jbr
 
 ### 自动化构建发布 (GitHub Actions CI/CD)
 本项目已配置 GitHub Actions 自动化流水线 (`.github/workflows/release.yml`)。每次推送（`push`）至 `main` 分支时，将自动执行编译、测试、签名打包并创建 GitHub Release 发布：
-- **安装包命名规范**：`Huiniao_1.X_XXXXXX(commit号)_(时间).apk`（例如：`Huiniao_1.1_d3b81cd_20261010_165030.apk`）
+- **安装包命名规范**：`Huiniao_1.X_XXXXXX(commit号)_(时间).apk`（例如：`Huiniao_1.2_d3b81cd_20261010_165030.apk`）
 - **发布页面**：前往 [Releases 页面](https://github.com/irvingwu0v0/HuiniaoTimetable/releases) 即可直接下载各版本最新签名的 APK。
 
 ---

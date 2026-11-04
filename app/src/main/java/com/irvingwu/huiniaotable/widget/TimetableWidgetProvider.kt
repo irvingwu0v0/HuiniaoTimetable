@@ -10,8 +10,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
+import com.irvingwu.huiniaotable.I18n
 import com.irvingwu.huiniaotable.MainActivity
 import com.irvingwu.huiniaotable.R
+import com.irvingwu.huiniaotable.t
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Course
 import com.irvingwu.huiniaotable.data.Schedule
@@ -21,6 +23,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private const val ACTION_REFRESH = "com.irvingwu.huiniaotable.widget.REFRESH"
 private const val REQUEST_REFRESH = 4096
@@ -162,10 +166,10 @@ private fun fallbackWidgetViews(context: Context): RemoteViews {
     val views = RemoteViews(context.packageName, R.layout.widget_timetable)
     views.setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
     views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_title))
-    views.setTextViewText(R.id.widget_subtitle, "打开 App 同步课表")
+    views.setTextViewText(R.id.widget_subtitle, t("打开 App 同步课表", "Open the app to sync your timetable"))
     views.setViewVisibility(R.id.widget_course_list, View.GONE)
     views.setViewVisibility(R.id.widget_empty, View.VISIBLE)
-    views.setTextViewText(R.id.widget_empty, "打开 App 同步课表")
+    views.setTextViewText(R.id.widget_empty, t("打开 App 同步课表", "Open the app to sync your timetable"))
     return views
 }
 
@@ -207,7 +211,7 @@ private fun buildRowViews(
         val footer = RemoteViews(context.packageName, R.layout.widget_footer)
         footer.setTextViewText(
             R.id.widget_footer_text,
-            "还有 ${courses.size - shownCount} 门课程",
+            t("还有 ${courses.size - shownCount} 门课程", "${courses.size - shownCount} more classes"),
         )
         rows += footer
     }
@@ -249,20 +253,27 @@ private fun subtitleText(
     makeupLabel: String?,
 ): String {
     val weekday = WEEKDAY_NAMES.getOrElse(today.dayOfWeek.value - 1) { "" }
-    val dateText = "${today.monthValue}月${today.dayOfMonth}日 $weekday"
+    val datePattern = if (I18n.isEnglish) "MMM d" else "M月d日"
+    val dateText = "${today.format(DateTimeFormatter.ofPattern(datePattern, Locale.getDefault()))} $weekday"
     return when {
-        offDay -> "$dateText · 法定节假日${holidayName?.let { " $it" } ?: ""} · 休息"
-        state.needsTermStart -> "$dateText · 未设置开学日期"
-        makeupLabel != null -> "$dateText · $makeupLabel · 第${state.currentWeek}周"
-        else -> "$dateText · 第${state.currentWeek}周"
+        offDay -> t(
+            "$dateText · 法定节假日${holidayName?.let { " $it" } ?: ""} · 休息",
+            "$dateText · Public holiday${holidayName?.let { " $it" } ?: ""} · No classes",
+        )
+        state.needsTermStart -> t("$dateText · 未设置开学日期", "$dateText · Start date not set")
+        makeupLabel != null -> t(
+            "$dateText · $makeupLabel · 第${state.currentWeek}周",
+            "$dateText · $makeupLabel · Week ${state.currentWeek}",
+        )
+        else -> t("$dateText · 第${state.currentWeek}周", "$dateText · Week ${state.currentWeek}")
     }
 }
 
 private fun emptyText(state: AppState, schedule: Schedule?, offDay: Boolean): String = when {
-    schedule == null -> "打开 App 同步课表"
-    state.needsTermStart -> "打开 App 设置开学日期"
-    offDay -> "今日休息"
-    else -> "今日无课"
+    schedule == null -> t("打开 App 同步课表", "Open the app to sync your timetable")
+    state.needsTermStart -> t("打开 App 设置开学日期", "Open the app to set the start date")
+    offDay -> t("今日休息", "No classes today")
+    else -> t("今日无课", "No classes today")
 }
 
 private fun parseRange(text: String): TimeRange? {

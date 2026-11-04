@@ -1,5 +1,6 @@
 package com.irvingwu.huiniaotable.data
 
+import com.irvingwu.huiniaotable.t
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.LocalDate
@@ -98,11 +99,17 @@ fun mergeHolidays(
     if (base == null && overrides.isEmpty()) return null
     val days = LinkedHashMap<LocalDate, HolidayDay>()
     base?.days?.let { days.putAll(it) }
-    overrides.forEach { days[it.date] = HolidayDay(it.date, it.name.ifBlank { "自定义" }, it.isOffDay) }
+    overrides.forEach {
+        days[it.date] = HolidayDay(
+            it.date,
+            it.name.ifBlank { t("自定义", "Custom") },
+            it.isOffDay,
+        )
+    }
     return HolidayYear(
         year = year,
         days = days,
-        source = base?.source ?: "手动添加",
+        source = base?.source ?: t("手动添加", "Manually added"),
         fetchedAt = base?.fetchedAt ?: 0L,
     )
 }
@@ -111,13 +118,23 @@ fun mergeHolidays(
  * 少数民族自治区节假日配置选项。
  * 数据源：https://github.com/irvingwu0v0/holiday-cn
  */
-enum class HolidayRegion(val code: String, val displayName: String) {
-    NONE("", "国务院公布方案"),
-    XINJIANG("xinjiang", "新疆维吾尔自治区"),
-    XIZANG("xizang", "西藏自治区"),
-    NINGXIA("ningxia", "宁夏回族自治区"),
-    GUANGXI("guangxi", "广西壮族自治区"),
-    NEIMENGGU("neimenggu", "内蒙古自治区");
+enum class HolidayRegion(val code: String) {
+    NONE(""),
+    XINJIANG("xinjiang"),
+    XIZANG("xizang"),
+    NINGXIA("ningxia"),
+    GUANGXI("guangxi"),
+    NEIMENGGU("neimenggu");
+
+    val displayName: String
+        get() = when (this) {
+            NONE -> t("国务院公布方案", "State Council schedule")
+            XINJIANG -> t("新疆维吾尔自治区", "Xinjiang Uygur Autonomous Region")
+            XIZANG -> t("西藏自治区", "Tibet Autonomous Region")
+            NINGXIA -> t("宁夏回族自治区", "Ningxia Hui Autonomous Region")
+            GUANGXI -> t("广西壮族自治区", "Guangxi Zhuang Autonomous Region")
+            NEIMENGGU -> t("内蒙古自治区", "Inner Mongolia Autonomous Region")
+        }
 
     companion object {
         fun fromCode(code: String?): HolidayRegion =
@@ -132,15 +149,33 @@ enum class HolidayRegion(val code: String, val displayName: String) {
  */
 enum class HolidaySource(
     val code: String,
-    val displayName: String,
-    val description: String,
 ) {
-    AUTO("auto", "自动优选", "多源轮询容灾（推荐）"),
-    GHPROXY("ghproxy", "ghproxy 代理加速", "国内 ghproxy 镜像代理访问 GitHub"),
-    JSDELIVR("jsdelivr", "jsDelivr CDN", "全球开源公共 CDN 加速节点"),
-    FASTLY("fastly", "Fastly CDN", "Fastly 全球边缘网络分发"),
-    GITHUB_RAW("github_raw", "GitHub Raw 直连", "官方源站直连（需良好网络）"),
-    CUSTOM("custom", "自定义镜像 / 代理", "指定自定义 ghproxy 或自建源");
+    AUTO("auto"),
+    GHPROXY("ghproxy"),
+    JSDELIVR("jsdelivr"),
+    FASTLY("fastly"),
+    GITHUB_RAW("github_raw"),
+    CUSTOM("custom");
+
+    val displayName: String
+        get() = when (this) {
+            AUTO -> t("自动优选", "Automatic")
+            GHPROXY -> t("ghproxy 代理加速", "ghproxy mirror")
+            JSDELIVR -> "jsDelivr CDN"
+            FASTLY -> "Fastly CDN"
+            GITHUB_RAW -> t("GitHub Raw 直连", "GitHub Raw direct")
+            CUSTOM -> t("自定义镜像 / 代理", "Custom mirror / proxy")
+        }
+
+    val description: String
+        get() = when (this) {
+            AUTO -> t("多源轮询容灾（推荐）", "Try multiple sources automatically (recommended)")
+            GHPROXY -> t("国内 ghproxy 镜像代理访问 GitHub", "Access GitHub through a ghproxy mirror")
+            JSDELIVR -> t("全球开源公共 CDN 加速节点", "Global open-source CDN")
+            FASTLY -> t("Fastly 全球边缘网络分发", "Fastly global edge network")
+            GITHUB_RAW -> t("官方源站直连（需良好网络）", "Direct official source (good network required)")
+            CUSTOM -> t("指定自定义 ghproxy 或自建源", "Use a custom ghproxy or self-hosted source")
+        }
 
     fun mirrors(customBaseUrl: String? = null): List<String> = when (this) {
         AUTO -> listOf(
@@ -321,7 +356,12 @@ class HolidayClient(private val http: HttpClient = HttpClient()) {
             }
         }
 
-        throw ParseException(lastError?.message ?: "调休数据获取失败，请检查网络或切换数据源")
+        throw ParseException(
+            lastError?.message ?: t(
+                "调休数据获取失败，请检查网络或切换数据源",
+                "Failed to load holiday data. Check your network or switch sources.",
+            ),
+        )
     }
 
     private fun fetchHolidayCn(baseUrl: String, year: Int, region: HolidayRegion): HolidayYear {
@@ -341,18 +381,24 @@ class HolidayClient(private val http: HttpClient = HttpClient()) {
             days[date] = HolidayDay(date, o.optString("name"), o.optBoolean("isOffDay", true))
         }
         // 下一年的文件会提前存在但 days 为空，这里按「还没发布」处理，避免覆盖已有缓存。
-        if (days.isEmpty()) throw ParseException("$year 年的放假通知还没发布")
+        if (days.isEmpty()) {
+            throw ParseException(t("$year 年的放假通知还没发布", "Holiday data for $year is not available yet"))
+        }
         val mirrorTag = when {
-            baseUrl.contains("ghproxy") || baseUrl.contains("gh-proxy") || baseUrl.contains("ghfast") -> "ghproxy 加速"
+            baseUrl.contains("ghproxy") || baseUrl.contains("gh-proxy") || baseUrl.contains("ghfast") ->
+                t("ghproxy 加速", "ghproxy")
             baseUrl.contains("jsdelivr") && !baseUrl.contains("fastly") -> "jsDelivr CDN"
             baseUrl.contains("fastly") -> "Fastly CDN"
             baseUrl.contains("raw.githubusercontent.com") -> "GitHub Raw"
-            else -> "自定义节点"
+            else -> t("自定义节点", "Custom mirror")
         }
         val sourceDesc = if (region != HolidayRegion.NONE && region.code.isNotBlank()) {
-            "holiday-cn（${region.displayName} · $mirrorTag）"
+            t("holiday-cn（${region.displayName} · $mirrorTag）", "holiday-cn (${region.displayName} · $mirrorTag)")
         } else {
-            "holiday-cn（国务院公布方案 · $mirrorTag）"
+            t(
+                "holiday-cn（国务院公布方案 · $mirrorTag）",
+                "holiday-cn (State Council schedule · $mirrorTag)",
+            )
         }
         return HolidayYear(year, days, sourceDesc, System.currentTimeMillis())
     }

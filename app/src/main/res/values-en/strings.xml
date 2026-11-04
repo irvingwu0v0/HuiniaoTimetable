@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Huiniao</string>
+    <string name="widget_title">Today\'s Timetable</string>
+    <string name="widget_description">Today\'s classes at a glance: time, course, and room, with live progress colours.</string>
+    <string name="widget_preview_date">Oct 5, Monday · Week 3</string>
+    <string name="widget_preview_course_1">Calculus</string>
+    <string name="widget_preview_time_1">10:00-10:45 · Teaching Building 1, Room 101</string>
+    <string name="widget_preview_course_2">College English</string>
+    <string name="widget_preview_time_2">10:50-11:35 · Teaching Building 2, Room 203</string>
+</resources>
