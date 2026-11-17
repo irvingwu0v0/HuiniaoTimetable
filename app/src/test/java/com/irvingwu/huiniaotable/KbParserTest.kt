@@ -133,8 +133,18 @@ class KbParserTest {
         assertEquals(listOf(3), KbParser.parseWeeks("3周"))
         assertEquals(listOf(1, 3, 5), KbParser.parseWeeks("1-5周(单)"))
         assertEquals(listOf(2, 4, 6), KbParser.parseWeeks("1-6(周)(双)"))
+        assertEquals((1..18).toList(), KbParser.parseWeeks("1-18(全)[01-02节]"))
+        assertEquals((1..10).toList() + (12..18).toList(), KbParser.parseWeeks("1-10,12-18(全)"))
+        assertEquals((2..18 step 2).toList(), KbParser.parseWeeks("2-18(双)"))
         assertEquals(emptyList<Int>(), KbParser.parseWeeks(""))
         assertEquals(emptyList<Int>(), KbParser.parseWeeks("周次待定"))
+    }
+
+    @Test
+    fun `新疆师范大学全周标记保持课程与教师匹配`() {
+        val xjnu = KbParser.parse(html.replace("(周)", "(全)"))
+        assertEquals(parsed.schedule.courses, xjnu.schedule.courses)
+        assertEquals(parsed.schedule.slotRows, xjnu.schedule.slotRows)
     }
 
     @Test

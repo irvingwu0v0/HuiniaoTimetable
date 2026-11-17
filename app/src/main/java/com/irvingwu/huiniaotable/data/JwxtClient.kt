@@ -1,8 +1,14 @@
 package com.irvingwu.huiniaotable.data
 
 import com.irvingwu.huiniaotable.t
+import org.jsoup.Jsoup
+import java.io.IOException
+import java.net.URI
 import java.net.URLEncoder
+import java.security.KeyFactory
+import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
+import javax.crypto.Cipher
 
 sealed interface LoginResult {
     data object Success : LoginResult
@@ -12,40 +18,47 @@ sealed interface LoginResult {
 class SessionExpiredException : Exception(t("登录状态已失效", "Session expired"))
 
 /**
- * 正方教务系统客户端。支持用户自定义教务系统端点网址。
+ * 强智教务系统客户端。支持通用 Base64 登录与新疆师范大学 RSA 登录。
  */
 class JwxtClient(
     private val http: HttpClient = HttpClient(),
     val baseUrl: String = Prefs.DEFAULT_JWXT_BASE_URL,
 ) {
 
-    /** 组合教务系统内部相对路径。 */
+    /** 接受域名、/jsxsd/ 根路径或完整的学生主页 URL。 */
     fun buildUrl(subPath: String = ""): String {
-        val cleanBase = baseUrl.trim().trimEnd('/')
-        val cleanSub = subPath.trim().trimStart('/')
-        if (cleanSub.isEmpty()) return cleanBase
-
-        val baseSegment = cleanBase.substringAfterLast('/', "")
-        val subSegment = cleanSub.substringBefore('/', "")
-        return if (baseSegment.isNotEmpty() && baseSegment.equals(subSegment, ignoreCase = true)) {
-            val rest = cleanSub.substringAfter('/', "")
-            if (rest.isEmpty()) cleanBase else "$cleanBase/$rest"
-        } else {
-            "$cleanBase/$cleanSub"
+        val uri = URI(baseUrl.trim())
+        require(uri.scheme in listOf("https", "http") && !uri.host.isNullOrBlank() && uri.userInfo == null) {
+            t("请输入有效的教务系统 HTTP(S) 网址", "Enter a valid HTTP(S) academic system URL")
         }
+        val segments = uri.path.orEmpty().split('/').filter { it.isNotEmpty() }
+        val contextIndex = segments.indexOfFirst { it.equals("jsxsd", ignoreCase = true) }
+        val contextPath = when {
+            contextIndex >= 0 -> "/" + segments.take(contextIndex + 1).joinToString("/")
+            segments.isEmpty() -> "/jsxsd"
+            else -> "/" + segments.joinToString("/")
+        }
+        val root = URI(uri.scheme, null, uri.host, uri.port, "$contextPath/", null, null).toASCIIString()
+        var path = subPath.trim().trimStart('/')
+        val context = contextPath.substringAfterLast('/')
+        if (path.substringBefore('/').equals(context, ignoreCase = true)) {
+            path = path.substringAfter('/', "")
+        }
+        return root + path
     }
 
     /**
      * 登录。流程与网页版一致：
      * 1. 访问首页校验是否存在验证码；
-     * 2. `POST /xk/LoginToXkLdap`，携带 `encoded = base64(学号)%%%base64(密码)`；
+     * 2. `POST /xk/LoginToXkLdap`，按学校要求以 RSA 或 Base64 构造 encoded；
      * 3. 访问受保护页面确认会话生效。
      */
     fun login(studentId: String, password: String): LoginResult {
         http.clearCookies()
         val loginUrl = buildUrl("")
         val loginPage = http.get(loginUrl)
-        if (loginPage.body.contains("id=\"SafeCodeImg\"") || loginPage.body.contains("name=\"SafeCode\"")) {
+        requireSuccess(loginPage)
+        if (Jsoup.parse(loginPage.body).selectFirst("#SafeCodeImg, input[name=SafeCode]") != null) {
             return LoginResult.Failure(
                 t(
                     "教务系统要求输入验证码，请用浏览器登录后使用",
@@ -54,28 +67,24 @@ class JwxtClient(
             )
         }
 
-        val encoded = base64(studentId) + "%%%" + base64(password)
         val postUrl = buildUrl("xk/LoginToXkLdap")
         val response = http.post(
             postUrl,
-            mapOf(
-                "loginMethod" to "LoginToXkLdap",
-                "userAccount" to studentId,
-                "userPassword" to password,
-                "encoded" to encoded,
-            ),
+            buildLoginForm(loginPage.body, studentId, password),
             referer = loginUrl,
         )
+        requireSuccess(response)
 
-        if (response.body.contains("id=\"loginForm\"")) {
+        if (isLoginPage(response.body)) {
             return LoginResult.Failure(
                 extractLoginMessage(response.body) ?: t("学号或密码错误", "Incorrect student ID or password"),
             )
         }
 
-        val probeUrl = buildUrl("framework/xsMain.jsp")
+        val probeUrl = homeUrl()
         val probe = http.get(probeUrl)
-        if (probe.body.contains("id=\"loginForm\"")) {
+        requireSuccess(probe)
+        if (isLoginPage(probe.body)) {
             return LoginResult.Failure(t("登录未生效，请稍后重试", "Sign-in did not complete. Please try again."))
         }
         return LoginResult.Success
@@ -87,17 +96,57 @@ class JwxtClient(
             append(buildUrl("xskb/xskb_list.do"))
             if (!term.isNullOrBlank()) append("?xnxq01id=").append(URLEncoder.encode(term, "UTF-8"))
         }
-        val response = http.get(url, referer = buildUrl("framework/xsMain.jsp"))
-        if (response.body.contains("id=\"loginForm\"")) throw SessionExpiredException()
+        val response = http.get(url, referer = homeUrl())
+        if (response.code == 401 || response.code == 403 || isLoginPage(response.body)) throw SessionExpiredException()
+        requireSuccess(response)
         return KbParser.parse(response.body, fallbackTerm = term.orEmpty())
     }
 
+    internal fun buildLoginForm(html: String, studentId: String, password: String): Map<String, String> {
+        // 仅对已核验的学校启用 RSA：其他学校的模板可能含有不会执行的 RSA 分支。
+        val rsa = isXjnu()
+        val encoded = if (rsa) {
+            val keyText = Regex("""\.setPublicKey\s*\(\s*["']([^"']+)["']\s*\)""")
+                .find(html)?.groupValues?.get(1)
+            require(!keyText.isNullOrBlank()) {
+                t("登录页缺少 RSA 公钥，请稍后重试", "The sign-in page is missing its RSA public key. Please try again.")
+            }
+            val der = Base64.getDecoder().decode(
+                keyText.replace("-----BEGIN PUBLIC KEY-----", "")
+                    .replace("-----END PUBLIC KEY-----", "").replace(Regex("\\s+"), ""),
+            )
+            val key = KeyFactory.getInstance("RSA").generatePublic(X509EncodedKeySpec(der))
+            fun encrypt(value: String): String {
+                val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+                cipher.init(Cipher.ENCRYPT_MODE, key)
+                return Base64.getEncoder().encodeToString(cipher.doFinal(value.toByteArray(Charsets.UTF_8)))
+            }
+            encrypt(studentId) + "%%%" + encrypt(password)
+        } else {
+            base64(studentId) + "%%%" + base64(password)
+        }
+        return mapOf(
+            "loginMethod" to "LoginToXkLdap",
+            "userAccount" to if (rsa) "" else studentId,
+            "userPassword" to if (rsa) "" else password,
+            "encoded" to encoded,
+        )
+    }
+
+    private fun isLoginPage(html: String): Boolean = Jsoup.parse(html).selectFirst("form#loginForm") != null
+
+    private fun isXjnu(): Boolean = URI(buildUrl()).host.equals("jwxt.xjnu.edu.cn", ignoreCase = true)
+
+    private fun homeUrl(): String = buildUrl(if (isXjnu()) "framework/xsMain.htmlx" else "framework/xsMain.jsp")
+
+    private fun requireSuccess(response: HttpResult) {
+        if (response.code !in 200..299) {
+            throw IOException(t("教务系统请求失败", "Academic system request failed") + " (HTTP ${response.code})")
+        }
+    }
+
     private fun extractLoginMessage(html: String): String? {
-        val raw = Regex("id=\"showMsg\"[^>]*>(.*?)</", RegexOption.DOT_MATCHES_ALL)
-            .find(html)?.groupValues?.get(1)
-            ?.replace(Regex("<[^>]+>"), "")
-            ?.trim()
-        return raw?.takeIf { it.isNotBlank() && it != "&nbsp;" }
+        return Jsoup.parse(html).selectFirst("#showMsg")?.text()?.trim()?.takeIf { it.isNotBlank() }
     }
 
     /** 与网页版 `encodeInp`（标准 Base64）保持一致。 */

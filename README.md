@@ -62,6 +62,16 @@
 
 ## 构建与测试
 
+### 新疆师范大学教务系统
+
+登录页「教务系统网址」填写 `https://jwxt.xjnu.edu.cn/jsxsd/`，也可直接粘贴学生主页完整地址 `https://jwxt.xjnu.edu.cn/jsxsd/framework/xsMain.htmlx`。输入自己的学号与密码后即可同步课表，并在设置中切换学期。
+
+该校账号与密码分别使用登录页提供的 RSA 公钥加密（与网页 JSEncrypt 的 PKCS#1 v1.5 协议一致），不再使用通用 Base64 登录；RSA 表单的明文学号、密码字段保持为空。公钥缺失或无效时终止登录。其他学校继续使用原有协议。
+
+HTTP 客户端按大小写不敏感的方式读取 Cookie 响应头，并在重定向的每一跳保存、重发会话 Cookie；拒绝 HTTPS 降级和跨源转发登录表单，最多跟随 10 次跳转。
+
+本地测试默认不连接教务系统。若需执行真实站点验证，通过当前进程的临时环境变量 `XJNU_STUDENT_ID`、`XJNU_PASSWORD` 提供凭据，再运行 `./gradlew --no-configuration-cache :app:testDebugUnitTest --tests '*XjnuLiveTest'`；完成后清除变量。真实验证时禁用配置缓存，避免 Gradle 缓存测试进程环境。测试只输出学期和排课条目数，不保存凭据、会话或课表原文。
+
 ```bash
 # 1. 配置 JDK 路径（示例）
 export JAVA_HOME=/opt/android-studio/jbr
