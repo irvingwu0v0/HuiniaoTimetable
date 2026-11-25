@@ -617,24 +617,17 @@ object TimetableRepository {
     fun clearImportedSchedule() {
         prefs.clearSchedule()
         _state.update {
-            AppState(
+            it.copy(
                 phase = Phase.LoggedOut,
-                jwxtBaseUrl = prefs.jwxtBaseUrl,
-                scheduleConfigName = ClassTimes.configName,
-                termStart = prefs.termStart,
-                campus = prefs.campus,
-                building = prefs.building,
-                weekendMode = prefs.weekendMode,
-                buildingSchemes = parseBuildingSchemes(prefs.buildingSchemesJson),
-                holidayFetchedAt = prefs.holidayFetchedAt,
-                holidayRegion = prefs.holidayRegion,
-                holidaySource = prefs.holidaySource,
-                holidayCustomMirror = prefs.holidayCustomMirror,
-                dynamicColor = prefs.dynamicColor,
-                classNotify = prefs.classNotifyEnabled,
-                lunchBreakSlotOverride = prefs.lunchBreakSlot,
-                hideEvening = prefs.hideEvening,
-                coursePlacements = parseCoursePlacements(prefs.coursePlacementsJson),
+                schedule = null,
+                terms = emptyList(),
+                term = "",
+                fetchedAt = 0L,
+                lastRefreshDay = null,
+                currentWeek = 1,
+                selectedWeek = 1,
+                selectedWeekTouched = false,
+                coursePlacements = emptyMap(),
             )
         }
         reloadHolidays()

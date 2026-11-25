@@ -121,6 +121,7 @@ class Prefs(context: Context) {
             .remove(KEY_LAST_REFRESH_DAY)
             .remove(KEY_FETCHED_AT)
             .remove(KEY_TERM)
+            .remove(KEY_COURSE_PLACEMENTS)
             .apply()
     }
 
