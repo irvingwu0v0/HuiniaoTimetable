@@ -1,19 +1,19 @@
 # 灰鸟课表 · HuiniaoTimetable
 
-灰鸟课表是一款遵循 **Google Material You (Material 3)** 规范设计的现代高校 Android 课表客户端。支持通用高校教务系统端点自由配置、统一身份认证登录、自动抓取与本地缓存、多校区/多楼宇作息时间管理、全学期系统日历同步、以及 Android 16 胶囊锁屏上课实时更新通知（Live Updates）。
+灰鸟课表是一款遵循 **Miuix / HyperOS** 设计语言的现代高校 Android 课表客户端。支持通用高校教务系统端点自由配置、统一身份认证登录、自动抓取与本地缓存、多校区/多楼宇作息时间管理、全学期系统日历同步、以及 Android 16 胶囊锁屏上课实时更新通知（Live Updates）。
 
 [![Platform](https://img.shields.io/badge/Platform-Android%2010%2B-brightgreen.svg)](https://developer.android.com/)
 [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
-[![Design](https://img.shields.io/badge/Design-Material%20You%20(M3)-purple.svg)](https://m3.material.io/)
+[![Design](https://img.shields.io/badge/Design-Miuix%20%2F%20HyperOS-purple.svg)](https://compose-miuix-ui.github.io/miuix/)
 [![Build & Release](https://github.com/irvingwu0v0/HuiniaoTimetable/actions/workflows/release.yml/badge.svg)](https://github.com/irvingwu0v0/HuiniaoTimetable/actions/workflows/release.yml)
 
 ---
 
 ## 核心特性
 
-### 1. Material You 动态设计与课程配色
+### 1. Miuix 动态设计与课程配色
 - **动态取色与自适应**：原生适配 Android 12+ Monet 动态色彩引擎，提供亮色与深色主题无缝切换；同时支持关闭动态色彩，采用灰鸟专属基准色盘。
-- **一课一色 (Per-Course Hue)**：同一门课程在课表、桌面小组件、日程同步与通知中保持全局统一的色相；基于 Material 3 色调板，亮色下容器色调约为 Tone 90 / 文字 Tone 10，深色下为 Tone 30 / 文字 Tone 90，确保通过 WCAG AA 对比度标准。
+- **一课一色 (Per-Course Hue)**：同一门课程在课表、桌面小组件、日程同步与通知中保持全局统一的色相；基于同一套色调板，亮色下容器色约为 Tone 90 / 文字 Tone 10，深色下为 Tone 30 / 文字 Tone 90，确保通过 WCAG AA 对比度标准。
 - **中英双语**：界面、通知、桌面小组件和系统日历描述随系统语言切换；英文应用名为 **Huiniao**，并支持 Android 13+ 按应用设置语言。
 
 ### 2. 上课实时通知（Live Updates）与课前提醒
@@ -43,7 +43,7 @@
 
 ### 6. 系统日程同步与桌面小组件
 - **日历一键导入与撤销**：根据全学期排课、校区作息与调休安排，全量写入系统日历（Calendar Provider），并附带课前 15 分钟系统闹钟提醒；支持在同步弹窗内「一键清除已导入日程」。
-- **桌面今日课表组件**：采用 Material You 动态取色规范，支持横竖自由缩放拉伸，已结课程灰色弱化、正在进行或下一节高亮强调，跨节次自动刷新。
+- **桌面今日课表组件**：采用系统动态取色，支持横竖自由缩放拉伸，已结课程灰色弱化、正在进行或下一节高亮强调，跨节次自动刷新。
 
 ### 7. 隐私安全与开发者调试
 - **本地硬件安全隔离**：用户学号与密码仅存储在本地设备私有沙盒中，密码通过 **Android KeyStore** 硬件密钥（AES-GCM-256）加密保护。
@@ -61,6 +61,14 @@
 ---
 
 ## 构建与测试
+
+### 网页登录导入课表
+
+在登录页点「网页登录导入」，填入学校教务系统网址（例如 `https://jwxt.example.edu.cn/jsxsd/`），在 WebView 里完成验证码 / 统一身份认证等网页登录流程。登录成功后会自动尝试跳转课表页，停留在「课表」页面点「导入当前页面课表」即可解析并保存，全程不在 App 内重复保存账号密码。
+
+- 自动识别强智、正方、青果等常见教务系统页面并选择合适的解析策略，其余结构走通用表格解析。
+- 课表按时段逐节绘制：1 节课只占半格，同门课连续的 2–3 节保持一个完整方块，跨「大节」也会连续显示。
+- HTTP 客户端逐跳保存并重发会话 Cookie，响应头大小写不敏感，拒绝 HTTPS 降级与跨源表单转发。
 
 ```bash
 # 1. 配置 JDK 路径（示例）
@@ -118,7 +126,7 @@ app/src/main/java/com/irvingwu/huiniaotable/
 │   ├── ScheduleScreen.kt        # 核心网格课表、长按拖动与调课视图
 │   ├── SelectionDialog.kt       # 规范化单选/分组选择对话框
 │   ├── SettingsScreen.kt        # 系统全局设置视图
-│   └── theme/                   # Material You 主题定义与课程调色板
+│   └── theme/                   # Miuix 主题定义与课程调色板
 └── widget/                       # 桌面小组件
     └── TimetableWidgetProvider.kt # 今日课表 RemoteViews 桌面控件
 ```

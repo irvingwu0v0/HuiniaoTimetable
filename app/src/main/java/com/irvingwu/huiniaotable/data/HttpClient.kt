@@ -1,6 +1,7 @@
 package com.irvingwu.huiniaotable.data
 
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -31,38 +32,67 @@ class HttpClient {
         request("POST", url, encodeForm(form).toByteArray(Charsets.UTF_8), referer)
 
     private fun request(method: String, url: String, body: ByteArray?, referer: String?): HttpResult {
-        val target = URL(url)
-        val host = target.host
-        val conn = (target.openConnection() as HttpURLConnection).apply {
-            requestMethod = method
-            connectTimeout = 15_000
-            readTimeout = 25_000
-            instanceFollowRedirects = true
-            setRequestProperty("User-Agent", USER_AGENT)
-            setRequestProperty("Accept", "text/html,application/json,application/xhtml+xml,*/*;q=0.8")
-            setRequestProperty("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
-            setRequestProperty("Accept-Encoding", "gzip")
-            setRequestProperty("Connection", "close")
-            if (referer != null) setRequestProperty("Referer", referer)
-            cookieHeaderFor(host).takeIf { it.isNotEmpty() }?.let { setRequestProperty("Cookie", it) }
-            if (body != null) {
-                doOutput = true
-                setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                setRequestProperty("Content-Length", body.size.toString())
+        var target = URL(url)
+        var currentMethod = method
+        var currentBody = body
+        var currentReferer = referer
+        for (redirect in 0..10) {
+            val host = target.host
+            val outgoingBody = currentBody
+            val conn = (target.openConnection() as HttpURLConnection).apply {
+                requestMethod = currentMethod
+                connectTimeout = 15_000
+                readTimeout = 25_000
+                // 逐跳接收和重发 Cookie，避免自动跳转丢失登录会话。
+                instanceFollowRedirects = false
+                setRequestProperty("User-Agent", USER_AGENT)
+                setRequestProperty("Accept", "text/html,application/json,application/xhtml+xml,*/*;q=0.8")
+                setRequestProperty("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+                setRequestProperty("Accept-Encoding", "gzip")
+                setRequestProperty("Connection", "close")
+                if (currentReferer != null) setRequestProperty("Referer", currentReferer)
+                cookieHeaderFor(host).takeIf { it.isNotEmpty() }?.let { setRequestProperty("Cookie", it) }
+                if (outgoingBody != null) {
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                    setRequestProperty("Content-Length", outgoingBody.size.toString())
+                }
+            }
+
+            try {
+                outgoingBody?.let { conn.outputStream.use { out -> out.write(it) } }
+                val code = conn.responseCode
+                // HTTP 响应头名称不区分大小写；学校反向代理返回的是小写 set-cookie。
+                storeCookies(host, conn.headerFields.entries
+                    .filter { it.key?.equals("Set-Cookie", ignoreCase = true) == true }
+                    .flatMap { it.value })
+                val location = conn.getHeaderField("Location")
+                if (code in listOf(301, 302, 303, 307, 308) && !location.isNullOrBlank()) {
+                    if (redirect == 10) throw IOException("Too many HTTP redirects")
+                    val next = URL(target, location)
+                    if (next.protocol !in listOf("http", "https") || (target.protocol == "https" && next.protocol != "https")) {
+                        throw IOException("Unsafe HTTP redirect")
+                    }
+                    if (code == 303 || ((code == 301 || code == 302) && currentMethod == "POST")) {
+                        currentMethod = "GET"
+                        currentBody = null
+                    }
+                    val sameOrigin = next.protocol == target.protocol && next.host.equals(target.host, true) &&
+                        next.port == target.port
+                    if (!sameOrigin && currentBody != null) throw IOException("Cross-origin form redirect refused")
+                    currentReferer = if (sameOrigin) target.toString() else null
+                    target = next
+                    continue
+                }
+                val stream = if (code >= 400) conn.errorStream else conn.inputStream
+                val decoded = stream?.let { maybeGunzip(it, conn.contentEncoding) } ?: ByteArray(0)
+                val charset = charsetOf(conn.contentType) ?: Charsets.UTF_8
+                return HttpResult(code, String(decoded, charset), target.toString())
+            } finally {
+                conn.disconnect()
             }
         }
-
-        try {
-            body?.let { conn.outputStream.use { out -> out.write(it) } }
-            val code = conn.responseCode
-            storeCookies(host, conn.headerFields["Set-Cookie"] ?: emptyList())
-            val stream: InputStream = if (code >= 400) (conn.errorStream ?: conn.inputStream) else conn.inputStream
-            val decoded = stream?.let { maybeGunzip(it, conn.contentEncoding) } ?: ByteArray(0)
-            val charset = charsetOf(conn.contentType) ?: Charsets.UTF_8
-            return HttpResult(code, String(decoded, charset), conn.url.toString())
-        } finally {
-            conn.disconnect()
-        }
+        throw IOException("Too many HTTP redirects")
     }
 
     private fun cookieHeaderFor(host: String): String =
