@@ -774,7 +774,8 @@ private fun TimetableGrid(
                                 .size(
                                     width = with(LocalDensity.current) { rect.width.toDp() },
                                     height = with(LocalDensity.current) { rect.height.toDp() },
-                                ),
+                                )
+                                .padding(vertical = 1.dp),
                         )
                     }
                 }
