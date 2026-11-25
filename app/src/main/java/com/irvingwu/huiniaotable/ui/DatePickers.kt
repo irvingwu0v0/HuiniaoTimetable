@@ -1,24 +1,24 @@
 package com.irvingwu.huiniaotable.ui
 
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.irvingwu.huiniaotable.t
-import java.time.Instant
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import java.time.LocalDate
-import java.time.ZoneOffset
 
-/**
- * 日期选择对话框。
- *
- * Material 3 的 DatePicker 用 UTC 零点毫秒表示日期，所以两个方向都用 UTC 换算，
- * 避免时区偏移导致差一天。
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** 日期选择对话框：三个数字输入框，保持轻量与一致的外观。 */
 @Composable
 fun PickDateDialog(
     title: String,
@@ -26,29 +26,57 @@ fun PickDateDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate) -> Unit,
 ) {
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = (current ?: LocalDate.now())
-            .atStartOfDay(ZoneOffset.UTC)
-            .toInstant()
-            .toEpochMilli(),
-    )
+    val initial = current ?: LocalDate.now()
+    var year by remember { mutableStateOf(initial.year.toString()) }
+    var month by remember { mutableStateOf(initial.monthValue.toString()) }
+    var day by remember { mutableStateOf(initial.dayOfMonth.toString()) }
+    val parsed = runCatching {
+        LocalDate.of(year.trim().toInt(), month.trim().toInt(), day.trim().toInt())
+    }.getOrNull()
 
-    DatePickerDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                val millis = state.selectedDateMillis
-                if (millis == null) {
-                    onDismiss()
-                } else {
-                    onConfirm(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = year,
+                        onValueChange = { year = it.filter(Char::isDigit).take(4) },
+                        label = { Text(t("年", "Year")) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1.4f),
+                    )
+                    OutlinedTextField(
+                        value = month,
+                        onValueChange = { month = it.filter(Char::isDigit).take(2) },
+                        label = { Text(t("月", "Month")) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = day,
+                        onValueChange = { day = it.filter(Char::isDigit).take(2) },
+                        label = { Text(t("日", "Day")) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
-            }) { Text(t("确定", "OK")) }
+                Text(
+                    if (parsed == null) t("请输入有效日期", "Enter a valid date") else parsed.toString(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                text = t("确定", "OK"),
+                onClick = { parsed?.let(onConfirm) ?: onDismiss() },
+                enabled = parsed != null,
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(t("取消", "Cancel")) }
+            TextButton(text = t("取消", "Cancel"), onClick = onDismiss)
         },
-    ) {
-        DatePicker(state = state, title = { Text(title) })
-    }
+        modifier = Modifier.fillMaxWidth(),
+    )
 }

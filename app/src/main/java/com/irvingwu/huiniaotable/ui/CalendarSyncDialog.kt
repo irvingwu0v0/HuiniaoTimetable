@@ -1,5 +1,7 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,20 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.EditCalendar
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.Button
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
+import com.irvingwu.huiniaotable.ui.compat.Surface
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +29,7 @@ import com.irvingwu.huiniaotable.data.AppState
 /**
  * 一键全部添加到系统日程 / 一键清除全部导入日程对话框。
  *
- * 遵循 Material 3 纵向多按钮规范，按操作主次纵向排列，彻底解决水平挤压错位问题：
+ * 遵循 HyperOS 纵向多按钮规范，按操作主次纵向排列，彻底解决水平挤压错位问题：
  *  1. [主要操作] 同步全部至系统日历 (Filled Button)
  *  2. [破坏性操作] 清除已导入日程 (Outlined Button, 警示色)
  *  3. [取消返回] 取消 (Text Button)
@@ -54,16 +50,16 @@ fun CalendarSyncDialog(
         onDismissRequest = onDismissRequest,
         icon = {
             Icon(
-                imageVector = Icons.Outlined.EditCalendar,
+                imageVector = AppIcons.EditCalendar,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp),
             )
         },
         title = {
             Text(
                 text = t("系统日历日程同步", "System calendar sync"),
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -74,9 +70,9 @@ fun CalendarSyncDialog(
             ) {
                 if (needsTermStart) {
                     Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        shape = AppTheme.shapes.small,
+                        color = AppTheme.colorScheme.errorContainer,
+                        contentColor = AppTheme.colorScheme.onErrorContainer,
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -84,7 +80,7 @@ fun CalendarSyncDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.WarningAmber,
+                                imageVector = AppIcons.WarningAmber,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                             )
@@ -93,15 +89,15 @@ fun CalendarSyncDialog(
                                     "尚未配置开学基准日期，系统无法将课程对应至具体公历日期。请先设定开学首周日期。",
                                     "Set the first week's start date so classes can be mapped to calendar dates.",
                                 ),
-                                style = MaterialTheme.typography.bodySmall,
+                                style = AppTheme.typography.bodySmall,
                             )
                         }
                     }
                 } else if (totalCourses == 0) {
                     Text(
                         text = t("当前课表暂无排课数据，无法执行日程写入。", "There are no scheduled classes to export."),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.bodyMedium,
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     Text(
@@ -109,11 +105,11 @@ fun CalendarSyncDialog(
                             "将依各教学楼作息时间，把本学期全部周次课程完整写入手机系统日历（Calendar Provider）。",
                             "All classes for this semester will be written to the system calendar using each building's schedule.",
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = AppTheme.typography.bodyMedium,
                     )
                     Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = AppTheme.shapes.small,
+                        color = AppTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(
@@ -176,7 +172,7 @@ fun CalendarSyncDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Sync,
+                            imageVector = AppIcons.Sync,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )
@@ -192,13 +188,13 @@ fun CalendarSyncDialog(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            imageVector = AppIcons.Delete,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = AppTheme.colorScheme.error,
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text(t("清除已导入的课表日程", "Clear imported class events"), color = MaterialTheme.colorScheme.error)
+                        Text(t("清除已导入的课表日程", "Clear imported class events"), color = AppTheme.colorScheme.error)
                     }
                 }
 
@@ -221,15 +217,15 @@ private fun FeaturePoint(title: String, desc: String) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(
-            imageVector = Icons.Outlined.Check,
+            imageVector = AppIcons.Check,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = AppTheme.colorScheme.primary,
             modifier = Modifier.size(14.dp),
         )
         Text(
             text = "$title：$desc",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.labelSmall,
+            color = AppTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

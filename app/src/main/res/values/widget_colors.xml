@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  桌面控件的 Material You 配色（浅色）。
+  桌面控件的系统动态配色（浅色）。
   直接引用系统的动态取色语义色，随壁纸 / 主题自动变化，和 App 内的
-  Material You（dynamicLightColorScheme）保持一致。
+  系统动态取色保持一致。
 -->
 <resources>
     <!-- 控件卡片背景 -->

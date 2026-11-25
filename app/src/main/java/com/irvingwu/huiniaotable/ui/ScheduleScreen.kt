@@ -1,5 +1,7 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.AnimatedVisibility
@@ -42,48 +44,27 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.EventNote
-import androidx.compose.material.icons.outlined.Apartment
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Class
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.EventRepeat
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.HolidayVillage
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.MeetingRoom
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.Today
-import androidx.compose.material.icons.outlined.RestartAlt
-import androidx.compose.material.icons.outlined.WorkHistory
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.AssistChip
+import com.irvingwu.huiniaotable.ui.compat.AssistChipDefaults
+import com.irvingwu.huiniaotable.ui.compat.Card
+import com.irvingwu.huiniaotable.ui.compat.CardDefaults
+import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
+import com.irvingwu.huiniaotable.ui.compat.FilterChip
+import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.IconButton
+import com.irvingwu.huiniaotable.ui.compat.ListItem
+import com.irvingwu.huiniaotable.ui.compat.LocalContentColor
+import com.irvingwu.huiniaotable.ui.compat.ListItemDefaults
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.ModalBottomSheet
+import com.irvingwu.huiniaotable.ui.compat.OutlinedCard
+import com.irvingwu.huiniaotable.ui.compat.Surface
+import com.irvingwu.huiniaotable.ui.compat.SuggestionChip
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
+import com.irvingwu.huiniaotable.ui.compat.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,6 +79,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -139,7 +121,7 @@ private val GridHeaderHeight = 46.dp
 private val PagePadding = 12.dp
 
 /**
- * 课表主视图：遵循 Material You 规范。
+ * 课表主视图：遵循 Miuix / HyperOS 设计规范。
  * 无需滚动、铺满全屏，整合了基准周设置、周次指示器、今日概览条、自适应作息时间与调休映射。
  */
 @Composable
@@ -190,10 +172,10 @@ fun ScheduleContent(
         if (placementCourse != null) {
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = AppTheme.colorScheme.primaryContainer,
+                    contentColor = AppTheme.colorScheme.onPrimaryContainer,
                 ),
-                shape = MaterialTheme.shapes.medium,
+                shape = AppTheme.shapes.medium,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = PagePadding, vertical = 3.dp),
@@ -204,14 +186,14 @@ fun ScheduleContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.EventRepeat,
+                        imageVector = AppIcons.EventRepeat,
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                     )
                     Column(Modifier.weight(1f)) {
                         Text(
                             text = t("调课中 · 第 ${state.selectedWeek} 周", "Moving · Week ${state.selectedWeek}"),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = AppTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
@@ -219,8 +201,8 @@ fun ScheduleContent(
                                 "点击任意空白格子，把《${placementCourse.name}》放到那里",
                                 "Tap an empty slot to place ${placementCourse.name} there",
                             ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                            style = AppTheme.typography.bodySmall,
+                            color = AppTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -246,7 +228,7 @@ fun ScheduleContent(
         val currentOnSelectWeek by rememberUpdatedState(onSelectWeek)
         val currentPlacementCourse by rememberUpdatedState(placementCourse)
 
-        // 周次切换时应用 Material 3 运动转场动画，支持在课表区域左右滑动切周
+        // 周次切换时应用平滑转场动画，支持在课表区域左右滑动切周
         AnimatedContent(
             targetState = state.selectedWeek,
             transitionSpec = {
@@ -346,9 +328,9 @@ private fun TermStartCard(
             .fillMaxWidth()
             .padding(horizontal = PagePadding, vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            containerColor = AppTheme.colorScheme.primaryContainer,
         ),
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier
@@ -358,26 +340,26 @@ private fun TermStartCard(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Icon(
-                imageVector = Icons.Outlined.CalendarMonth,
+                imageVector = AppIcons.CalendarMonth,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = AppTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(24.dp),
             )
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = t("配置学期开学首周基准日", "Set the term start date"),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = AppTheme.colorScheme.onPrimaryContainer,
                 )
                 Text(
                     text = t(
                         "系统将以首周周一自动核算各教学周次与调休安排",
                         "Teaching weeks and makeup days are calculated from the first Monday",
                     ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
                 )
             }
 
@@ -385,7 +367,7 @@ private fun TermStartCard(
                 onClick = { showPicker = true },
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
             ) {
-                Text(t("配置日期", "Set date"), style = MaterialTheme.typography.labelLarge)
+                Text(t("配置日期", "Set date"), style = AppTheme.typography.labelLarge)
             }
         }
     }
@@ -421,13 +403,13 @@ private fun WeekSelector(
                 label = { Text(t("当前周", "Current week"), fontWeight = FontWeight.Medium) },
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Outlined.Today,
+                        imageVector = AppIcons.Today,
                         contentDescription = null,
                         modifier = Modifier.size(AssistChipDefaults.IconSize),
                     )
                 },
                 colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    containerColor = AppTheme.colorScheme.surfaceContainerHigh,
                 ),
             )
         }
@@ -469,14 +451,14 @@ private fun TodayBar(
     val next = nextCourse(courses, state)
 
     val containerColor = when {
-        holiday?.isOffDay == true -> MaterialTheme.colorScheme.errorContainer
-        makeupLabel != null -> MaterialTheme.colorScheme.tertiaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+        holiday?.isOffDay == true -> AppTheme.colorScheme.errorContainer
+        makeupLabel != null -> AppTheme.colorScheme.tertiaryContainer
+        else -> AppTheme.colorScheme.surfaceContainerHigh
     }
     val contentColor = when {
-        holiday?.isOffDay == true -> MaterialTheme.colorScheme.onErrorContainer
-        makeupLabel != null -> MaterialTheme.colorScheme.onTertiaryContainer
-        else -> MaterialTheme.colorScheme.onSurface
+        holiday?.isOffDay == true -> AppTheme.colorScheme.onErrorContainer
+        makeupLabel != null -> AppTheme.colorScheme.onTertiaryContainer
+        else -> AppTheme.colorScheme.onSurface
     }
 
     Card(
@@ -484,7 +466,7 @@ private fun TodayBar(
             containerColor = containerColor,
             contentColor = contentColor,
         ),
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.medium,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = PagePadding, vertical = 3.dp)
@@ -497,9 +479,9 @@ private fun TodayBar(
         ) {
             Icon(
                 imageVector = when {
-                    holiday?.isOffDay == true -> Icons.Outlined.HolidayVillage
-                    makeupLabel != null -> Icons.Outlined.WorkHistory
-                    else -> Icons.AutoMirrored.Outlined.EventNote
+                    holiday?.isOffDay == true -> AppIcons.HolidayVillage
+                    makeupLabel != null -> AppIcons.WorkHistory
+                    else -> AppIcons.EventNote
                 },
                 contentDescription = null,
                 modifier = Modifier.size(22.dp),
@@ -518,7 +500,7 @@ private fun TodayBar(
                             "Today · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]} · ${courses.size} classes",
                         )
                     },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = AppTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -536,7 +518,7 @@ private fun TodayBar(
                         } else {
                             t("今日教学安排已全部结束", "All classes have finished for today")
                         },
-                        style = MaterialTheme.typography.bodySmall,
+                        style = AppTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = contentColor.copy(alpha = 0.85f),
@@ -545,7 +527,7 @@ private fun TodayBar(
             }
 
             Icon(
-                imageVector = Icons.Outlined.ExpandMore,
+                imageVector = AppIcons.ExpandMore,
                 contentDescription = t("查看今日课程详情", "View today's schedule"),
                 tint = contentColor.copy(alpha = 0.7f),
             )
@@ -585,17 +567,6 @@ private fun TimetableGrid(
     }
     val effectiveByDay = columns.zip(effectiveDays).toMap()
 
-    // 预构建当周课程槽位索引，35 格查询降至 O(1)，阻断全表重复计算
-    val coursesBySlot: Map<Pair<Int, Int>, List<Course>> = remember(schedule, state.coursePlacements, week) {
-        val map = HashMap<Pair<Int, Int>, MutableList<Course>>()
-        schedule.courses.forEach { course ->
-            state.positionsOf(course, week).forEach { pos ->
-                map.getOrPut(pos) { ArrayList() }.add(course)
-            }
-        }
-        map
-    }
-
     // 大节时段课程网格行（可隐藏晚自习第 9-10 节）
     val visibleRows = remember(schedule.slotRows, state.hideEvening) {
         if (state.hideEvening && schedule.slotRows.size > 1) {
@@ -603,6 +574,20 @@ private fun TimetableGrid(
         } else {
             schedule.slotRows
         }
+    }
+    // 每一行「是否已被课程占用」：跨大节的课会同时占用相邻两行，避免出现可放置的假空格。
+    val occupiedRows: Set<Pair<Int, Int>> = remember(schedule, state.coursePlacements, week, visibleRows) {
+        val occupied = HashSet<Pair<Int, Int>>()
+        schedule.courses.forEach { course ->
+            state.positionsOf(course, week).forEach { (day, _) ->
+                visibleRows.forEachIndexed { idx, slotRow ->
+                    if ((course.startSlot..course.endSlot).any { it in slotRow.startSlot..slotRow.endSlot }) {
+                        occupied.add(day to idx)
+                    }
+                }
+            }
+        }
+        occupied
     }
     // 中午午休分割条所在的行索引（根据设置的午休开始节次动态确定，默认是相差最大的两节之后）
     val noonDividerRowIndex = remember(visibleRows, state.effectiveLunchBreakSlot) {
@@ -621,8 +606,8 @@ private fun TimetableGrid(
     fun isOffDayOf(day: Int): Boolean =
         dateOf(day, week, state)?.let { state.isOffDay(it) } == true
 
-    // 各格子在根坐标下的矩形，使用非状态 Map 避免 onGloballyPositioned 触发重组风暴
-    val cellBounds = remember { HashMap<Int, Rect>() }
+    // 各格子在根坐标下的矩形；用状态 Map 让课程方块层在首次布局后自动出现
+    val cellBounds = remember { mutableStateMapOf<Int, Rect>() }
     val tilePositions = remember { HashMap<String, Offset>() }
     var gridOrigin by remember { mutableStateOf(Offset.Zero) }
 
@@ -635,7 +620,7 @@ private fun TimetableGrid(
         val (day, row) = cell
         if (isOffDayOf(day)) return false
         val eff = effectiveByDay[day] ?: day
-        return coursesBySlot[eff to row].isNullOrEmpty()
+        return occupiedRows.none { it.first == eff && it.second == row }
     }
 
     fun cellAt(point: Offset): Pair<Int, Int>? {
@@ -650,6 +635,53 @@ private fun TimetableGrid(
         columns.firstOrNull { (effectiveByDay[it] ?: it) == effDay }
 
     fun rectOfColumn(columnDay: Int, row: Int): Rect? = cellBounds[keyOf(columnDay, row)]
+
+    fun tileDragModifier(course: Course, effDay: Int, rowIndex: Int, tileKey: String): Modifier =
+        Modifier
+            .onGloballyPositioned { tilePositions[tileKey] = it.positionInRoot() }
+            .pointerInput(tileKey, week) {
+                var dragPointer = Offset.Zero
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { local ->
+                        dragging = course
+                        dragSourceCell = effDay to rowIndex
+                        dragActive.value = true
+                        dragPointer = (tilePositions[tileKey] ?: Offset.Zero) + local
+                        val newHover = cellAt(dragPointer).takeIf { validTarget(it) }
+                        if (hoverCell != newHover) {
+                            hoverCell = newHover
+                        }
+                    },
+                    onDrag = { change, delta ->
+                        change.consume()
+                        dragPointer += delta
+                        val newHover = cellAt(dragPointer).takeIf { validTarget(it) }
+                        if (hoverCell != newHover) {
+                            hoverCell = newHover
+                        }
+                    },
+                    onDragEnd = {
+                        val target = hoverCell
+                        if (target != null && validTarget(target)) {
+                            val targetEffDay = effectiveByDay[target.first] ?: target.first
+                            val sourceCell = dragSourceCell ?: (effDay to rowIndex)
+                            if (targetEffDay to target.second != sourceCell) {
+                                onMoveCourse(course, week, targetEffDay, target.second, sourceCell.first, sourceCell.second)
+                            }
+                        }
+                        dragging = null
+                        dragSourceCell = null
+                        hoverCell = null
+                        dragActive.value = false
+                    },
+                    onDragCancel = {
+                        dragging = null
+                        dragSourceCell = null
+                        hoverCell = null
+                        dragActive.value = false
+                    },
+                )
+            }
 
     Box(modifier.onGloballyPositioned { gridOrigin = it.positionInRoot() }) {
         Column(Modifier.fillMaxSize()) {
@@ -677,7 +709,7 @@ private fun TimetableGrid(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
+                        .weight((row.endSlot - row.startSlot + 1).coerceAtLeast(1).toFloat()),
                 ) {
                     SlotLabel(
                         row = row,
@@ -686,21 +718,16 @@ private fun TimetableGrid(
                     columns.forEachIndexed { index, day ->
                         val eff = effectiveDays[index]
                         val offDay = isOffDayOf(day)
-                        val cellCourses = coursesBySlot[eff to rowIndex] ?: emptyList()
-                        val isDropTarget = dragging != null && !offDay && cellCourses.isEmpty()
+                        val isDropTarget = dragging != null && !offDay && occupiedRows.none { it.first == eff && it.second == rowIndex }
                         val isHovered = hoverCell == (day to rowIndex)
-                        val isPlacementTarget = placementCourse != null && !offDay && cellCourses.isEmpty()
+                        val isPlacementTarget = placementCourse != null && !offDay && occupiedRows.none { it.first == eff && it.second == rowIndex }
                         val packed = keyOf(day, rowIndex)
 
                         CourseCell(
-                            courses = cellCourses,
                             isOffDay = offDay,
                             dropTarget = isDropTarget,
                             hovered = isHovered,
                             placementTarget = isPlacementTarget,
-                            draggingKey = dragging?.key,
-                            palette = palette,
-                            onCourseClick = onCourseClick,
                             onPlaceTap = if (isPlacementTarget) {
                                 {
                                     val targetEffDay = effectiveByDay[day] ?: day
@@ -708,56 +735,6 @@ private fun TimetableGrid(
                                 }
                             } else null,
                             onBounds = { rect -> cellBounds[packed] = rect },
-                            tileModifier = { course ->
-                                val tileKey = "${course.key}#$eff#$rowIndex"
-                                Modifier
-                                    .onGloballyPositioned {
-                                        tilePositions[tileKey] = it.positionInRoot()
-                                    }
-                                    .pointerInput(tileKey, week) {
-                                        var dragPointer = Offset.Zero
-                                        detectDragGesturesAfterLongPress(
-                                            onDragStart = { local ->
-                                                dragging = course
-                                                dragSourceCell = eff to rowIndex
-                                                dragActive.value = true
-                                                dragPointer = (tilePositions[tileKey] ?: Offset.Zero) + local
-                                                val newHover = cellAt(dragPointer).takeIf { validTarget(it) }
-                                                if (hoverCell != newHover) {
-                                                    hoverCell = newHover
-                                                }
-                                            },
-                                            onDrag = { change, delta ->
-                                                change.consume()
-                                                dragPointer += delta
-                                                val newHover = cellAt(dragPointer).takeIf { validTarget(it) }
-                                                if (hoverCell != newHover) {
-                                                    hoverCell = newHover
-                                                }
-                                            },
-                                            onDragEnd = {
-                                                val target = hoverCell
-                                                if (target != null && validTarget(target)) {
-                                                    val targetEffDay = effectiveByDay[target.first] ?: target.first
-                                                    val sourceCell = dragSourceCell ?: (eff to rowIndex)
-                                                    if (targetEffDay to target.second != sourceCell) {
-                                                        onMoveCourse(course, week, targetEffDay, target.second, sourceCell.first, sourceCell.second)
-                                                    }
-                                                }
-                                                dragging = null
-                                                dragSourceCell = null
-                                                hoverCell = null
-                                                dragActive.value = false
-                                            },
-                                            onDragCancel = {
-                                                dragging = null
-                                                dragSourceCell = null
-                                                hoverCell = null
-                                                dragActive.value = false
-                                            },
-                                        )
-                                    }
-                            },
                             modifier = Modifier.weight(1f),
                         )
                     }
@@ -766,6 +743,40 @@ private fun TimetableGrid(
                 // 在上午时段结束（中午午休）下方插入分割方块，区分上午与下午
                 if (rowIndex == noonDividerRowIndex) {
                     NoonDividerBar()
+                }
+            }
+        }
+
+        // 课程方块层：按「节」精确定位，跨大节的三节课也只画一个连续方块。
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clipToBounds(),
+        ) {
+            for ((index, day) in columns.withIndex()) {
+                if (isOffDayOf(day)) continue
+                val eff = effectiveDays[index]
+                for (course in schedule.courses) {
+                    if (!course.activeIn(week)) continue
+                    for ((_, rowIndex) in state.positionsOf(course, week).filter { it.first == eff }) {
+                        val row = visibleRows.getOrNull(rowIndex) ?: continue
+                        val cellRect = cellBounds[keyOf(day, rowIndex)] ?: continue
+                        val rect = courseTileRect(course, row, cellRect, gridOrigin)
+                        val tileKey = "${course.key}#$day#$rowIndex"
+                        CourseTile(
+                            course = course,
+                            dimmed = false,
+                            lifted = dragging?.key == course.key,
+                            palette = palette,
+                            onCourseClick = onCourseClick,
+                            modifier = tileDragModifier(course, eff, rowIndex, tileKey)
+                                .offset { IntOffset(rect.left.roundToInt(), rect.top.roundToInt()) }
+                                .size(
+                                    width = with(LocalDensity.current) { rect.width.toDp() },
+                                    height = with(LocalDensity.current) { rect.height.toDp() },
+                                ),
+                        )
+                    }
                 }
             }
         }
@@ -833,7 +844,7 @@ private fun NoonDividerBar() {
         // 课表主体网格区域的浅灰分割方块，无文字
         Surface(
             color = bgColor,
-            shape = MaterialTheme.shapes.small,
+            shape = AppTheme.shapes.small,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
@@ -882,16 +893,16 @@ private fun DayHeader(
     val isWorkday = (holiday != null && !holiday.isOffDay)
 
     val containerColor = when {
-        isToday -> MaterialTheme.colorScheme.primary
-        isOffDay -> MaterialTheme.colorScheme.surfaceContainerHighest
-        isWorkday -> MaterialTheme.colorScheme.tertiaryContainer
-        else -> MaterialTheme.colorScheme.surfaceContainerLow
+        isToday -> AppTheme.colorScheme.primary
+        isOffDay -> AppTheme.colorScheme.surfaceContainerHighest
+        isWorkday -> AppTheme.colorScheme.tertiaryContainer
+        else -> AppTheme.colorScheme.surfaceContainerLow
     }
     val contentColor = when {
-        isToday -> MaterialTheme.colorScheme.onPrimary
-        isOffDay -> MaterialTheme.colorScheme.onSurfaceVariant
-        isWorkday -> MaterialTheme.colorScheme.onTertiaryContainer
-        else -> MaterialTheme.colorScheme.onSurface
+        isToday -> AppTheme.colorScheme.onPrimary
+        isOffDay -> AppTheme.colorScheme.onSurfaceVariant
+        isWorkday -> AppTheme.colorScheme.onTertiaryContainer
+        else -> AppTheme.colorScheme.onSurface
     }
 
     Box(
@@ -902,7 +913,7 @@ private fun DayHeader(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(MaterialTheme.shapes.small)
+                .clip(AppTheme.shapes.small)
                 .background(containerColor),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -913,7 +924,7 @@ private fun DayHeader(
             ) {
                 Text(
                     text = weekdayShortName(day),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = AppTheme.typography.labelMedium,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                     color = contentColor,
                 )
@@ -921,17 +932,17 @@ private fun DayHeader(
                     Box(
                         modifier = Modifier
                             .size(15.dp)
-                            .background(MaterialTheme.colorScheme.error, CircleShape),
+                            .background(AppTheme.colorScheme.error, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = t("休", "Off"),
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = AppTheme.typography.labelSmall.copy(
                                 fontSize = 8.sp,
                                 lineHeight = 8.sp,
                                 fontWeight = FontWeight.Bold,
                             ),
-                            color = MaterialTheme.colorScheme.onError,
+                            color = AppTheme.colorScheme.onError,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -939,17 +950,17 @@ private fun DayHeader(
                     Box(
                         modifier = Modifier
                             .size(15.dp)
-                            .background(MaterialTheme.colorScheme.tertiary, CircleShape),
+                            .background(AppTheme.colorScheme.tertiary, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = t("班", "Class"),
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = AppTheme.typography.labelSmall.copy(
                                 fontSize = 8.sp,
                                 lineHeight = 8.sp,
                                 fontWeight = FontWeight.Bold,
                             ),
-                            color = MaterialTheme.colorScheme.onTertiary,
+                            color = AppTheme.colorScheme.onTertiary,
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -958,7 +969,7 @@ private fun DayHeader(
 
             Text(
                 text = date?.let { "${it.monthValue}/${it.dayOfMonth}" }.orEmpty(),
-                style = MaterialTheme.typography.labelSmall.copy(
+                style = AppTheme.typography.labelSmall.copy(
                     fontSize = 10.sp,
                 ),
                 color = contentColor.copy(alpha = if (isToday) 0.95f else 0.75f),
@@ -967,7 +978,7 @@ private fun DayHeader(
             makeupLabel?.let { label ->
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                    style = AppTheme.typography.labelSmall.copy(fontSize = 8.sp),
                     fontWeight = FontWeight.Bold,
                     color = contentColor,
                     maxLines = 1,
@@ -1000,15 +1011,15 @@ private fun SlotLabel(
     ) {
         Surface(
             shape = RoundedCornerShape(4.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            color = AppTheme.colorScheme.surfaceContainerHighest,
         ) {
             Text(
                 text = "${row.startSlot}-${row.endSlot}",
-                style = MaterialTheme.typography.labelSmall.copy(
+                style = AppTheme.typography.labelSmall.copy(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = AppTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
             )
         }
@@ -1018,20 +1029,20 @@ private fun SlotLabel(
         start?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.labelSmall.copy(
+                style = AppTheme.typography.labelSmall.copy(
                     fontSize = 9.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = AppTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
         end?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.labelSmall.copy(
+                style = AppTheme.typography.labelSmall.copy(
                     fontSize = 9.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                color = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
             )
         }
@@ -1039,32 +1050,25 @@ private fun SlotLabel(
 }
 
 /**
- * 课程格子容器：休假当天整个格子背景统一填充灰色。
+ * 课程格子容器：只负责背景、高亮与点击放置；课程方块由上层统一定位绘制。
  */
 @Composable
 private fun CourseCell(
-    courses: List<Course>,
     isOffDay: Boolean,
     dropTarget: Boolean,
     hovered: Boolean,
     placementTarget: Boolean = false,
-    draggingKey: String?,
-    palette: CoursePalette,
-    onCourseClick: (Course) -> Unit,
     onPlaceTap: (() -> Unit)? = null,
     onBounds: (Rect) -> Unit,
-    tileModifier: (Course) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
     val cellColor = if (isOffDay) {
-        MaterialTheme.colorScheme.surfaceContainerHigh
+        AppTheme.colorScheme.surfaceContainerHigh
     } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
+        AppTheme.colorScheme.surfaceContainerLowest
     }
 
-    val highlighted = dropTarget || hovered || placementTarget
-    val targetColor = MaterialTheme.colorScheme.primary
-
+    val targetColor = AppTheme.colorScheme.primary
     val highlight = when {
         hovered -> targetColor.copy(alpha = 0.30f)
         dropTarget -> targetColor.copy(alpha = 0.12f)
@@ -1077,6 +1081,7 @@ private fun CourseCell(
         placementTarget -> targetColor.copy(alpha = 0.60f)
         else -> Color.Transparent
     }
+    val highlighted = dropTarget || hovered || placementTarget
 
     Surface(
         modifier = modifier
@@ -1088,7 +1093,7 @@ private fun CourseCell(
                     Modifier.border(
                         width = 1.5.dp,
                         color = borderColor,
-                        shape = MaterialTheme.shapes.small,
+                        shape = AppTheme.shapes.small,
                     )
                 } else {
                     Modifier
@@ -1101,7 +1106,7 @@ private fun CourseCell(
                     Modifier
                 },
             ),
-        shape = MaterialTheme.shapes.small,
+        shape = AppTheme.shapes.small,
         color = cellColor,
     ) {
         Box(
@@ -1114,28 +1119,19 @@ private fun CourseCell(
                         Modifier
                     }
                 ),
-        ) {
-            if (courses.isNotEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    courses.forEach { course ->
-                        CourseTile(
-                            course = course,
-                            dimmed = isOffDay,
-                            lifted = draggingKey == course.key,
-                            palette = palette,
-                            onCourseClick = onCourseClick,
-                            modifier = tileModifier(course)
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-            }
-        }
+        )
     }
+}
+
+/** 课程在网格里的绝对矩形：按「节」比例从单元格内截取，支持跨大节连续绘制。 */
+private fun courseTileRect(course: Course, row: SlotRow, cellRect: Rect, gridOrigin: Offset): Rect {
+    val span = (row.endSlot - row.startSlot + 1).coerceAtLeast(1)
+    val startOffset = (course.startSlot - row.startSlot).coerceIn(0, span - 1)
+    val endOffset = (course.endSlot - row.startSlot).coerceIn(startOffset, span - 1)
+    val top = cellRect.top - gridOrigin.y + cellRect.height * (startOffset.toFloat() / span)
+    val left = cellRect.left - gridOrigin.x
+    val bottom = top + cellRect.height * ((endOffset - startOffset + 1).toFloat() / span)
+    return Rect(left, top, left + cellRect.width, bottom)
 }
 
 /**
@@ -1150,21 +1146,21 @@ private fun CourseTile(
     onCourseClick: (Course) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // 同一门课（按课程名）始终命中同一组 Material You 色块。
+    // 同一门课（按课程名）始终命中同一组同一色相的色块。
     val colors = palette.forKey(course.name)
 
     val tileBg = if (dimmed) {
-        MaterialTheme.colorScheme.surfaceContainerHighest
+        AppTheme.colorScheme.surfaceContainerHighest
     } else {
         colors.container
     }
     val tileContent = if (dimmed) {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+        AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
     } else {
         colors.onContainer
     }
     val accent = if (dimmed) {
-        MaterialTheme.colorScheme.outlineVariant
+        AppTheme.colorScheme.outlineVariant
     } else {
         colors.accent
     }
@@ -1183,7 +1179,7 @@ private fun CourseTile(
                 },
             )
             .clickable { onCourseClick(course) },
-        shape = MaterialTheme.shapes.small,
+        shape = AppTheme.shapes.small,
         color = tileBg,
         contentColor = tileContent,
         shadowElevation = 0.dp,
@@ -1194,21 +1190,21 @@ private fun CourseTile(
         ) {
             Text(
                 text = course.name,
-                style = MaterialTheme.typography.labelSmall.copy(lineHeight = 12.sp),
+                style = AppTheme.typography.labelSmall.copy(lineHeight = 12.sp),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
             course.room?.let { room ->
                 TileInfoRow(
-                    icon = Icons.Outlined.LocationOn,
+                    icon = AppIcons.LocationOn,
                     text = room,
                     tint = accent,
                 )
             }
             course.teacher?.let { teacher ->
                 TileInfoRow(
-                    icon = Icons.Outlined.Person,
+                    icon = AppIcons.Person,
                     text = teacher,
                     tint = accent,
                 )
@@ -1235,7 +1231,7 @@ private fun DragOverlay(
                 scaleX = 1.04f
                 scaleY = 1.04f
             },
-        shape = MaterialTheme.shapes.small,
+        shape = AppTheme.shapes.small,
         color = colors.container,
         contentColor = colors.onContainer,
         shadowElevation = 14.dp,
@@ -1247,16 +1243,16 @@ private fun DragOverlay(
         ) {
             Text(
                 text = course.name,
-                style = MaterialTheme.typography.labelSmall.copy(lineHeight = 12.sp),
+                style = AppTheme.typography.labelSmall.copy(lineHeight = 12.sp),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
             )
             course.room?.let { room ->
-                TileInfoRow(icon = Icons.Outlined.LocationOn, text = room, tint = colors.accent)
+                TileInfoRow(icon = AppIcons.LocationOn, text = room, tint = colors.accent)
             }
             course.teacher?.let { teacher ->
-                TileInfoRow(icon = Icons.Outlined.Person, text = teacher, tint = colors.accent)
+                TileInfoRow(icon = AppIcons.Person, text = teacher, tint = colors.accent)
             }
         }
     }
@@ -1283,7 +1279,7 @@ private fun TileInfoRow(
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+            style = AppTheme.typography.labelSmall.copy(fontSize = 9.sp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -1293,7 +1289,6 @@ private fun TileInfoRow(
 /**
  * 今日课程详情底部抽屉。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TodaySheet(
     state: AppState,
@@ -1310,7 +1305,7 @@ private fun TodaySheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        containerColor = AppTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier
@@ -1324,9 +1319,9 @@ private fun TodaySheet(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.EventNote,
+                    imageVector = AppIcons.EventNote,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = AppTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),
                 )
                 Text(
@@ -1334,16 +1329,16 @@ private fun TodaySheet(
                         "今日教学日程 · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]}",
                         "Today's classes · ${WEEKDAY_NAMES[today.dayOfWeek.value - 1]}",
                     ),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = AppTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
             }
 
             if (holiday != null) {
                 Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = if (holiday.isOffDay) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = if (holiday.isOffDay) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onTertiaryContainer,
+                    shape = AppTheme.shapes.small,
+                    color = if (holiday.isOffDay) AppTheme.colorScheme.errorContainer else AppTheme.colorScheme.tertiaryContainer,
+                    contentColor = if (holiday.isOffDay) AppTheme.colorScheme.onErrorContainer else AppTheme.colorScheme.onTertiaryContainer,
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1351,7 +1346,7 @@ private fun TodaySheet(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Icon(
-                            imageVector = if (holiday.isOffDay) Icons.Outlined.HolidayVillage else Icons.Outlined.WorkHistory,
+                            imageVector = if (holiday.isOffDay) AppIcons.HolidayVillage else AppIcons.WorkHistory,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                         )
@@ -1364,14 +1359,14 @@ private fun TodaySheet(
                                 )
                                 else -> t("调休上班日：${holiday.name}", "Makeup workday: ${holiday.name}")
                             },
-                            style = MaterialTheme.typography.labelMedium,
+                            style = AppTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
             if (courses.isEmpty()) {
                 Box(
@@ -1382,8 +1377,8 @@ private fun TodaySheet(
                 ) {
                     Text(
                         text = t("今日无任何教学计划安排", "No classes scheduled today"),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.bodyMedium,
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
@@ -1391,7 +1386,7 @@ private fun TodaySheet(
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = AppTheme.colorScheme.surface,
                         ),
                     ) {
                         Column(
@@ -1404,20 +1399,20 @@ private fun TodaySheet(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    color = AppTheme.colorScheme.primaryContainer,
                                 ) {
                                     Text(
                                         text = state.timeTextFor(course),
-                                        style = MaterialTheme.typography.labelMedium,
+                                        style = AppTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        color = AppTheme.colorScheme.onPrimaryContainer,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     )
                                 }
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     text = course.name,
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = AppTheme.typography.titleMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -1435,15 +1430,15 @@ private fun TodaySheet(
                                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Outlined.LocationOn,
+                                            imageVector = AppIcons.LocationOn,
                                             contentDescription = null,
                                             modifier = Modifier.size(14.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            tint = AppTheme.colorScheme.onSurfaceVariant,
                                         )
                                         Text(
                                             text = r,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = AppTheme.typography.bodySmall,
+                                            color = AppTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
                                 }
@@ -1454,15 +1449,15 @@ private fun TodaySheet(
                                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Outlined.Person,
+                                            imageVector = AppIcons.Person,
                                             contentDescription = null,
                                             modifier = Modifier.size(14.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            tint = AppTheme.colorScheme.onSurfaceVariant,
                                         )
                                         Text(
                                             text = t,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = AppTheme.typography.bodySmall,
+                                            color = AppTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
                                 }
@@ -1478,7 +1473,6 @@ private fun TodaySheet(
 /**
  * 课程详情底部抽屉。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseDetailSheet(
     course: Course?,
@@ -1496,7 +1490,7 @@ fun CourseDetailSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        containerColor = AppTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier
@@ -1509,16 +1503,16 @@ fun CourseDetailSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = course.name,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = AppTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f),
                     )
                     // 调课：选择目标教学周并跳转
                     IconButton(onClick = { showWeekJump = true }) {
                         Icon(
-                            imageVector = Icons.Outlined.EventRepeat,
+                            imageVector = AppIcons.EventRepeat,
                             contentDescription = t("调课 · 跳到指定教学周", "Move class · jump to a week"),
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = AppTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -1529,10 +1523,10 @@ fun CourseDetailSheet(
                     course.classLabel?.cleanClassLabel()?.let { label ->
                         SuggestionChip(
                             onClick = {},
-                            label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(label, style = AppTheme.typography.labelSmall) },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Outlined.Groups,
+                                    imageVector = AppIcons.Groups,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                 )
@@ -1542,10 +1536,10 @@ fun CourseDetailSheet(
                     buildingKey?.let { b ->
                         SuggestionChip(
                             onClick = {},
-                            label = { Text(b, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(b, style = AppTheme.typography.labelSmall) },
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Outlined.Apartment,
+                                    imageVector = AppIcons.Apartment,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                 )
@@ -1555,40 +1549,40 @@ fun CourseDetailSheet(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
             DetailListItem(
-                icon = Icons.Outlined.Schedule,
+                icon = AppIcons.Schedule,
                 headline = t("教学时段", "Time"),
                 supporting = "${course.dayText} ${course.slotText} (${ClassTimes.timeTextFor(course.startSlot, course.endSlot, scheme).ifBlank { t("作息待定", "Time TBD") }})",
             )
 
             DetailListItem(
-                icon = Icons.Outlined.MeetingRoom,
+                icon = AppIcons.MeetingRoom,
                 headline = t("教学场地", "Location"),
                 supporting = course.room ?: t("未指定具体教室", "No room specified"),
             )
 
             DetailListItem(
-                icon = Icons.Outlined.Person,
+                icon = AppIcons.Person,
                 headline = t("主讲教师", "Instructor"),
                 supporting = course.teacher ?: t("教师信息未录入", "Instructor not provided"),
             )
 
             DetailListItem(
-                icon = Icons.Outlined.DateRange,
+                icon = AppIcons.DateRange,
                 headline = t("教学周次", "Teaching weeks"),
                 supporting = course.weekText,
             )
 
             DetailListItem(
-                icon = Icons.Outlined.Apartment,
+                icon = AppIcons.Apartment,
                 headline = t("所属作息方案", "Schedule"),
                 supporting = scheme.fullLabel,
             )
 
             if (state.isCourseMoved(course)) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
                 val removed = state.removedWeeksOf(course)
                 val targets = state.placementWeeksOf(course)
                 val separator = t("、", ", ")
@@ -1611,8 +1605,8 @@ fun CourseDetailSheet(
                 }
                 Text(
                     text = t("$summary。", "$summary."),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
                 TextButton(
                     onClick = {
@@ -1622,7 +1616,7 @@ fun CourseDetailSheet(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.RestartAlt,
+                        imageVector = AppIcons.RestartAlt,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -1661,15 +1655,15 @@ private fun WeekJumpDialog(
         onDismissRequest = onDismiss,
         icon = {
             Icon(
-                imageVector = Icons.Outlined.EventRepeat,
+                imageVector = AppIcons.EventRepeat,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
             )
         },
         title = {
             Text(
                 text = t("调课 · 选择目标周次", "Move class · choose a week"),
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -1686,22 +1680,22 @@ private fun WeekJumpDialog(
                             val selected = week == currentWeek
                             Surface(
                                 onClick = { onSelect(week) },
-                                shape = MaterialTheme.shapes.small,
+                                shape = AppTheme.shapes.small,
                                 color = if (selected) {
-                                    MaterialTheme.colorScheme.primary
+                                    AppTheme.colorScheme.primary
                                 } else {
-                                    MaterialTheme.colorScheme.surfaceContainerHighest
+                                    AppTheme.colorScheme.surfaceContainerHighest
                                 },
                                 contentColor = if (selected) {
-                                    MaterialTheme.colorScheme.onPrimary
+                                    AppTheme.colorScheme.onPrimary
                                 } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                    AppTheme.colorScheme.onSurfaceVariant
                                 },
                                 modifier = Modifier.weight(1f),
                             ) {
                                 Text(
                                     text = t("第 $week 周", "Week $week"),
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = AppTheme.typography.labelMedium,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier
@@ -1736,21 +1730,21 @@ private fun DetailListItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),
             )
         },
         headlineContent = {
             Text(
                 text = headline,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = AppTheme.typography.labelMedium,
+                color = AppTheme.colorScheme.onSurfaceVariant,
             )
         },
         supportingContent = {
             Text(
                 text = supporting,
-                style = MaterialTheme.typography.bodyLarge,
+                style = AppTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
             )
         },
@@ -1777,9 +1771,9 @@ fun EmptySchedulePlaceholder(
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
-            imageVector = Icons.Outlined.Class,
+            imageVector = AppIcons.Class,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            tint = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(64.dp),
         )
 
@@ -1791,7 +1785,7 @@ fun EmptySchedulePlaceholder(
             } else {
                 t("尚未同步教务课表数据", "Timetable has not been synced")
             },
-            style = MaterialTheme.typography.titleMedium,
+            style = AppTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
 
@@ -1803,8 +1797,8 @@ fun EmptySchedulePlaceholder(
             } else {
                 t("请验证统一身份凭据并同步教务系统课表", "Sign in and sync the timetable from your academic system")
             },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AppTheme.typography.bodyMedium,
+            color = AppTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
 
@@ -1815,7 +1809,7 @@ fun EmptySchedulePlaceholder(
             enabled = !refreshing,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Sync,
+                imageVector = AppIcons.Sync,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )

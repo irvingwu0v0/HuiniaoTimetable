@@ -1,5 +1,7 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,28 +17,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.EditCalendar
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,9 +62,9 @@ private enum class MainTab(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
 ) {
-    Schedule(Icons.Filled.DateRange, Icons.Outlined.DateRange),
-    Courses(Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List),
-    Settings(Icons.Filled.Settings, Icons.Outlined.Settings),
+    Schedule(AppIcons.DateRange, AppIcons.DateRange),
+    Courses(AppIcons.List, AppIcons.List),
+    Settings(AppIcons.Settings, AppIcons.Settings),
     ;
 
     val label: String
@@ -118,10 +107,25 @@ fun HuiniaoApp() {
 
         when (state.phase) {
             Phase.Loading -> LoadingScreen()
-            Phase.LoggedOut -> LoginScreen(
-                state = state,
-                onLogin = { studentId, password -> TimetableRepository.login(studentId, password) },
-            )
+            Phase.LoggedOut -> {
+                var webImport by rememberSaveable { mutableStateOf(false) }
+                if (webImport) {
+                    WebImportScreen(
+                        state = state,
+                        onBack = { webImport = false },
+                        onImported = { html, baseUrl ->
+                            TimetableRepository.importFromHtml(html, baseUrl)
+                            webImport = false
+                        },
+                    )
+                } else {
+                    LoginScreen(
+                        state = state,
+                        onLogin = { studentId, password -> TimetableRepository.login(studentId, password) },
+                        onOpenWebImport = { webImport = true },
+                    )
+                }
+            }
 
             Phase.Ready -> MainScreen(state = state, snackbarHostState = snackbarHostState)
         }
@@ -134,13 +138,10 @@ private fun LoadingScreen() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
-        )
+        CircularProgressIndicator()
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
     var tab by rememberSaveable { mutableStateOf(MainTab.Schedule) }
@@ -318,69 +319,44 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
         SubScreen.None -> Unit
     }
 
+    val titleText: String
+    val subtitleText: String
+    when (tab) {
+        MainTab.Schedule -> {
+            titleText = t("课程作息表", "Class Timetable")
+            subtitleText = buildString {
+                if (state.term.isNotBlank()) append("${state.term} · ")
+                append(t("第 ${state.selectedWeek} 教学周", "Week ${state.selectedWeek}"))
+                if (state.selectedWeek == state.currentWeek) append(t(" (当前周)", " (Current)"))
+            }
+        }
+
+        MainTab.Courses -> {
+            titleText = t("学期课程总览", "Semester Courses")
+            subtitleText = t(
+                "共检索到 ${state.schedule?.distinctCourses?.size ?: 0} 门教学课程",
+                "${state.schedule?.distinctCourses?.size ?: 0} courses found",
+            )
+        }
+
+        MainTab.Settings -> {
+            titleText = t("系统设置", "Settings")
+            subtitleText = ""
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
+                title = titleText,
+                subtitle = subtitleText,
                 navigationIcon = {
                     if (tab == MainTab.Schedule) {
-                        IconButton(
-                            onClick = { showCalendarDialog = true },
-                        ) {
+                        IconButton(onClick = { showCalendarDialog = true }) {
                             Icon(
-                                imageVector = Icons.Outlined.EditCalendar,
+                                imageVector = AppIcons.EditCalendar,
                                 contentDescription = t("一键全部添加到日程", "Add all classes to calendar"),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                },
-                title = {
-                    when (tab) {
-                        MainTab.Schedule -> {
-                            Column {
-                                Text(
-                                    text = t("课程作息表", "Class Timetable"),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Text(
-                                    text = buildString {
-                                        if (state.term.isNotBlank()) append("${state.term} · ")
-                                        append(t("第 ${state.selectedWeek} 教学周", "Week ${state.selectedWeek}"))
-                                        if (state.selectedWeek == state.currentWeek) {
-                                            append(t(" (当前周)", " (Current)"))
-                                        }
-                                    },
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        MainTab.Courses -> {
-                            Column {
-                                Text(
-                                    text = t("学期课程总览", "Semester Courses"),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Text(
-                                    text = t(
-                                        "共检索到 ${state.schedule?.distinctCourses?.size ?: 0} 门教学课程",
-                                        "${state.schedule?.distinctCourses?.size ?: 0} courses found",
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        MainTab.Settings -> {
-                            Text(
-                                text = t("系统设置", "Settings"),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -395,40 +371,28 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         } else {
                             IconButton(onClick = { TimetableRepository.refresh() }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Refresh,
+                                    imageVector = AppIcons.Refresh,
                                     contentDescription = t("同步教务数据", "Sync academic data"),
                                 )
                             }
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
             )
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ) {
+            NavigationBar {
                 MainTab.entries.forEach { entry ->
-                    val selected = (tab == entry)
                     NavigationBarItem(
-                        selected = selected,
+                        selected = tab == entry,
                         onClick = { tab = entry },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) entry.selectedIcon else entry.unselectedIcon,
-                                contentDescription = entry.label,
-                            )
-                        },
-                        label = { Text(entry.label) },
+                        icon = if (tab == entry) entry.selectedIcon else entry.unselectedIcon,
+                        label = entry.label,
                     )
                 }
             }
@@ -439,7 +403,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            // Material You Tab 切换动态平滑过渡
+            // Tab 切换动态平滑过渡
             AnimatedContent(
                 targetState = tab,
                 transitionSpec = {

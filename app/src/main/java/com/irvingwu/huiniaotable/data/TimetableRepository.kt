@@ -472,6 +472,48 @@ object TimetableRepository {
         }
     }
 
+    /**
+     * 用 WebView 中已登录页面的 HTML 导入课表。
+     *
+     * 登录、验证码、SSO 全部交给 WebView，本地不保存账号密码；
+     * 只持久化解析后的课表和来源地址。
+     */
+    fun importFromHtml(html: String, baseUrl: String) {
+        scope.launch {
+            try {
+                require(html.isNotBlank()) { tr("没有读取到页面内容", "No page content was captured") }
+                val parsed = KbParser.parse(html)
+                require(parsed.schedule.courses.isNotEmpty()) {
+                    tr("当前页面里没有识别到课程，请确认停留在课表页面", "No courses found. Make sure the timetable page is open.")
+                }
+                val schedule = parsed.schedule
+                prefs.scheduleJson = schedule.toJson().toString()
+                prefs.fetchedAt = schedule.fetchedAt
+                prefs.lastRefreshDay = LocalDate.now().toString()
+                prefs.term = schedule.term
+                if (baseUrl.isNotBlank()) prefs.jwxtBaseUrl = baseUrl
+
+                _state.update { current ->
+                    current.copy(
+                        schedule = schedule,
+                        terms = parsed.terms.ifEmpty { current.terms },
+                        term = schedule.term.ifBlank { current.term },
+                        fetchedAt = schedule.fetchedAt,
+                        lastRefreshDay = prefs.lastRefreshDay,
+                        jwxtBaseUrl = prefs.jwxtBaseUrl,
+                        phase = Phase.Ready,
+                        loggedIn = false,
+                        loginError = null,
+                    )
+                }
+                recomputeWeeks()
+                pushMessage(tr("课表已导入", "Timetable imported"))
+            } catch (t: Throwable) {
+                pushMessage(tr("导入失败：${t.message ?: "无法解析页面"}", "Import failed: ${t.message ?: "could not parse page"}"))
+            }
+        }
+    }
+
     /** 手动刷新课表。 */
     fun refresh() {
         scope.launch { doRefresh(manual = true) }

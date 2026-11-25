@@ -1,12 +1,12 @@
 package com.irvingwu.huiniaotable.ui.theme
 
-import androidx.compose.material3.MaterialTheme
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 
-/** 一门课在课表里的三段配色，语义对齐 Material You 的「容器色 / 其上内容色 / 强调色」。 */
+/** 一门课在课表里的三段配色，语义为「容器色 / 其上内容色 / 强调色」。 */
 data class CourseColors(
     val container: Color,
     val onContainer: Color,
@@ -17,12 +17,11 @@ data class CourseColors(
  * 课程色板：为一学期里互不相同的课程各自分配一个稳定、饱和、且在浅/深色主题下都清晰可读的
  * 色块。
  *
- * 设计依据（Material 3 / Material You 色彩体系，参见 material-foundation/material-color-utilities
- * 与 m3.material.io 的 Color roles）：
+ * 设计依据（系统动态取色的色调板体系）：
  *  - 沿用「色调板（tonal palette）」思路：同一个色相只改变色调；浅色主题取 tone≈90 的容器色
  *    配 tone≈10 的深色前景，深色主题取 tone≈30 的容器色配 tone≈90 的浅色前景，与规范中
  *    PrimaryContainer / onPrimaryContainer 的明度关系保持一致，因此文本对比度足够；
- *  - 全部色相由当前动态主题的 primary 色相在色环上均分旋转得到：开启 Material You 动态取色时
+ *  - 全部色相由当前动态主题的 primary 色相在色环上均分旋转得到：开启系统动态取色时
  *    会跟随壁纸基色整体偏移，关闭时跟随灰鸟青品牌色，始终保持同一套视觉气质；
  *  - 同一门课按课程名归一化后始终命中同一色相，保证「同一课程同一颜色」。
  */
@@ -55,8 +54,8 @@ private const val HUE_COUNT = 16
 /** 依据当前主题生成课程色板；主题（动态取色结果 / 明暗）变化时自动重建。 */
 @Composable
 fun rememberCoursePalette(): CoursePalette {
-    val seed = MaterialTheme.colorScheme.primary
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val seed = AppTheme.colorScheme.primary
+    val isDark = AppTheme.colorScheme.surface.luminance() < 0.5f
     return remember(seed, isDark) { buildCoursePalette(seed, isDark) }
 }
 

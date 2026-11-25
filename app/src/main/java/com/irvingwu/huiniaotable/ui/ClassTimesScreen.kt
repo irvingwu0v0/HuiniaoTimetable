@@ -1,5 +1,7 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -20,43 +22,26 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Apartment
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.Domain
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FileDownload
-import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material.icons.outlined.RestartAlt
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.WbSunny
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.Button
+import com.irvingwu.huiniaotable.ui.compat.ButtonDefaults
+import com.irvingwu.huiniaotable.ui.compat.Card
+import com.irvingwu.huiniaotable.ui.compat.CardDefaults
+import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
+import com.irvingwu.huiniaotable.ui.compat.FilterChip
+import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.IconButton
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
+import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
+import com.irvingwu.huiniaotable.ui.compat.Scaffold
+import com.irvingwu.huiniaotable.ui.compat.SegmentedButton
+import com.irvingwu.huiniaotable.ui.compat.SegmentedButtonDefaults
+import com.irvingwu.huiniaotable.ui.compat.SingleChoiceSegmentedButtonRow
+import com.irvingwu.huiniaotable.ui.compat.Surface
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +57,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Campus
 import com.irvingwu.huiniaotable.data.CampusBuilding
@@ -82,7 +71,6 @@ import com.irvingwu.huiniaotable.t
 /**
  * 作息时间与校区楼宇独立配置页面。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClassTimesScreen(
     state: AppState,
@@ -158,7 +146,7 @@ fun ClassTimesScreen(
     // 默认作息方案单选对话框（选项下面不要有小字）
     if (showDefaultSchemeDialog) {
         GroupedSingleChoiceDialog(
-            icon = Icons.Outlined.Schedule,
+            icon = AppIcons.Schedule,
             title = t("未指定楼宇默认作息方案", "Default schedule for unmatched buildings"),
             groupedItems = groupedSchemes,
             selectedItem = state.timeTable,
@@ -204,7 +192,7 @@ fun ClassTimesScreen(
         val currentChoice = lunchChoices.firstOrNull { it.slot == state.lunchBreakSlotOverride } ?: lunchChoices.first()
 
         SingleChoiceDialog(
-            icon = Icons.Outlined.WbSunny,
+            icon = AppIcons.WbSunny,
             title = t("选择中午午休时段", "Select lunch break"),
             items = lunchChoices,
             selectedItem = currentChoice,
@@ -239,7 +227,7 @@ fun ClassTimesScreen(
     // 教学楼专属作息方案单选对话框（打开 dialog 分校区小标题展示作息方案）
     activeBuildingKey?.let { buildingKey ->
         GroupedSingleChoiceDialog(
-            icon = Icons.Outlined.Domain,
+            icon = AppIcons.Domain,
             title = t("配置「$buildingKey」作息方案", "Schedule for $buildingKey"),
             groupedItems = groupedSchemes,
             selectedItem = state.schemeForKey(buildingKey),
@@ -273,7 +261,7 @@ fun ClassTimesScreen(
             title = {
                 Text(
                     text = t("导出作息配置 JSON", "Export schedule JSON"),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
             },
@@ -281,8 +269,8 @@ fun ClassTimesScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = t("以下为当前生效作息规范的完整结构化定义：", "The complete active schedule definition:"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.bodySmall,
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = exportedJson,
@@ -291,7 +279,7 @@ fun ClassTimesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(240.dp),
-                        textStyle = MaterialTheme.typography.bodySmall,
+                        textStyle = AppTheme.typography.bodySmall,
                     )
                 }
             },
@@ -303,7 +291,7 @@ fun ClassTimesScreen(
                         showExportDialog = false
                     },
                 ) {
-                    Icon(imageVector = Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = AppIcons.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(t("复制到剪贴板", "Copy to clipboard"))
                 }
@@ -316,32 +304,23 @@ fun ClassTimesScreen(
         )
     }
 
-    Scaffold(
+    MiuixScaffold(
         topBar = {
-            TopAppBar(
+            MiuixTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    MiuixIconButton(onClick = onBack) {
+                        MiuixIcon(
+                            imageVector = AppIcons.ArrowBack,
                             contentDescription = t("返回", "Back"),
                         )
                     }
                 },
-                title = {
-                    Text(
-                        text = t("作息时间与校区楼宇", "Schedules, campuses and buildings"),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
+                title = t("作息时间与校区楼宇", "Schedules, campuses and buildings"),
                 actions = {
                     IconButton(onClick = { isCreatingScheme = true }) {
-                        Icon(imageVector = Icons.Outlined.Add, contentDescription = t("新建方案", "New schedule"))
+                        Icon(imageVector = AppIcons.Add, contentDescription = t("新建方案", "New schedule"))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
             )
         },
     ) { innerPadding ->
@@ -361,15 +340,15 @@ fun ClassTimesScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Schedule,
+                            imageVector = AppIcons.Schedule,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = AppTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp),
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = state.scheduleConfigName,
-                                style = MaterialTheme.typography.titleMedium,
+                                style = AppTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Text(
@@ -377,14 +356,14 @@ fun ClassTimesScreen(
                                     "包含 ${schemes.size} 套楼宇方案 · 基准校区：${state.campus.label}",
                                     "${schemes.size} building schedules · Base campus: ${state.campus.label}",
                                 ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = AppTheme.typography.bodySmall,
+                                color = AppTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
 
                     Spacer(Modifier.height(4.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -394,7 +373,7 @@ fun ClassTimesScreen(
                             onClick = { showImportDialog = true },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(imageVector = Icons.Outlined.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(t("导入 JSON", "Import JSON"))
                         }
@@ -402,7 +381,7 @@ fun ClassTimesScreen(
                             onClick = { showExportDialog = true },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(imageVector = Icons.Outlined.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(t("导出 JSON", "Export JSON"))
                         }
@@ -416,7 +395,7 @@ fun ClassTimesScreen(
                             onClick = { isCreatingScheme = true },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(imageVector = Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(t("新建作息方案", "New schedule"))
                         }
@@ -427,7 +406,7 @@ fun ClassTimesScreen(
                             },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(t("恢复标准作息", "Restore standard schedule"))
                         }
@@ -445,11 +424,11 @@ fun ClassTimesScreen(
                     ) {
                         Text(
                             text = t("图形化节次起止时间", "Period start and end times"),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = AppTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
                         TextButton(onClick = { editingScheme = activeScheme }) {
-                            Icon(imageVector = Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t("编辑此方案", "Edit schedule"))
                         }
@@ -470,7 +449,7 @@ fun ClassTimesScreen(
                                 )
                             }
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
                     }
 
                     val periods = ClassTimes.periods(activeScheme)
@@ -479,7 +458,7 @@ fun ClassTimesScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.small)
+                                .clip(AppTheme.shapes.small)
                                 .clickable { editingScheme = activeScheme }
                                 .padding(vertical = 8.dp, horizontal = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -487,15 +466,15 @@ fun ClassTimesScreen(
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                color = AppTheme.colorScheme.secondaryContainer,
                                 modifier = Modifier.size(36.dp),
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
                                         text = "$slot",
-                                        style = MaterialTheme.typography.titleSmall,
+                                        style = AppTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        color = AppTheme.colorScheme.onSecondaryContainer,
                                     )
                                 }
                             }
@@ -503,20 +482,20 @@ fun ClassTimesScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = t("第 $slot 节", "Period $slot"),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = AppTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
                                 Text(
                                     text = "${clockTime.start} — ${clockTime.end}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = AppTheme.typography.bodySmall,
+                                    color = AppTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
 
                             Icon(
-                                imageVector = Icons.Outlined.Edit,
+                                imageVector = AppIcons.Edit,
                                 contentDescription = t("修改时间", "Change time"),
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = AppTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp),
                             )
                         }
@@ -524,7 +503,7 @@ fun ClassTimesScreen(
                         if (slot == state.effectiveLunchBreakSlot && idx < periods.size - 1) {
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                                color = AppTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
                                 modifier = Modifier
                                     .padding(vertical = 4.dp)
                                     .fillMaxWidth(),
@@ -535,15 +514,15 @@ fun ClassTimesScreen(
                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Outlined.WbSunny,
+                                        imageVector = AppIcons.WbSunny,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = AppTheme.colorScheme.primary,
                                         modifier = Modifier.size(14.dp),
                                     )
                                     Text(
                                         text = t("中午午休时段（第 $slot 节后开始）", "Lunch break (after period $slot)"),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        style = AppTheme.typography.labelSmall,
+                                        color = AppTheme.colorScheme.onPrimaryContainer,
                                         fontWeight = FontWeight.Medium,
                                     )
                                 }
@@ -552,7 +531,7 @@ fun ClassTimesScreen(
 
                         if (idx < periods.size - 1) {
                             HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             )
                         }
                     }
@@ -563,7 +542,7 @@ fun ClassTimesScreen(
             item {
                 ClassTimesCard {
                     ClassTimesSettingRow(
-                        icon = Icons.Outlined.Apartment,
+                        icon = AppIcons.Apartment,
                         title = t("默认基准校区", "Default campus"),
                         subtitle = t(
                             "未匹配到特定教学楼时，按该校区默认时段核算",
@@ -588,36 +567,36 @@ fun ClassTimesScreen(
                     }
 
                     Spacer(Modifier.height(8.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                     ClassTimesSettingRow(
-                        icon = Icons.Outlined.Schedule,
+                        icon = AppIcons.Schedule,
                         title = t("未指定楼宇默认作息", "Default schedule for unmatched buildings"),
                         subtitle = "${state.timeTable.label} (${state.timeTable.campus})",
                         onClick = { showDefaultSchemeDialog = true },
                         trailing = {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                imageVector = AppIcons.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                tint = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.size(18.dp),
                             )
                         },
                     )
 
                     Spacer(Modifier.height(8.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                     ClassTimesSettingRow(
-                        icon = Icons.Outlined.WbSunny,
+                        icon = AppIcons.WbSunny,
                         title = t("中午午休开始时段", "Lunch break start"),
                         subtitle = t("第 ${state.effectiveLunchBreakSlot} 节后", "After period ${state.effectiveLunchBreakSlot}"),
                         onClick = { showLunchBreakDialog = true },
                         trailing = {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                imageVector = AppIcons.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                tint = AppTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.size(18.dp),
                             )
                         },
@@ -631,26 +610,26 @@ fun ClassTimesScreen(
                     ClassTimesCard {
                         Text(
                             text = t("楼宇作息映射", "Building schedule mapping"),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = AppTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = AppTheme.colorScheme.primary,
                         )
                         state.buildingKeys.forEachIndexed { index, key ->
                             val scheme = state.schemeForKey(key)
                             if (index > 0) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 2.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                    color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 )
                             }
                             ClassTimesSettingRow(
-                                icon = Icons.Outlined.Domain,
+                                icon = AppIcons.Domain,
                                 title = key,
                                 onClick = { activeBuildingKey = key },
                                 trailing = {
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.secondaryContainer,
+                                        color = AppTheme.colorScheme.secondaryContainer,
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -659,15 +638,15 @@ fun ClassTimesScreen(
                                         ) {
                                             Text(
                                                 text = scheme.label,
-                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                                style = AppTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                                 fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                color = AppTheme.colorScheme.onSecondaryContainer,
                                             )
                                             Icon(
-                                                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                                imageVector = AppIcons.KeyboardArrowRight,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(14.dp),
-                                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                tint = AppTheme.colorScheme.onSecondaryContainer,
                                             )
                                         }
                                     }
@@ -684,7 +663,6 @@ fun ClassTimesScreen(
 /**
  * 专门的作息方案编辑页面：配置校区、方案名称，并在起止时间输入框旁提供可视化时间选择器。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SchemeEditScreen(
     initialScheme: CampusBuilding?,
@@ -759,30 +737,23 @@ fun SchemeEditScreen(
         }
     }
 
-    Scaffold(
+    MiuixScaffold(
         topBar = {
-            TopAppBar(
+            MiuixTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    MiuixIconButton(onClick = onBack) {
+                        MiuixIcon(
+                            imageVector = AppIcons.ArrowBack,
                             contentDescription = t("返回", "Back"),
                         )
                     }
                 },
-                title = {
-                    Text(
-                        text = if (isNew) t("新建作息方案", "New schedule") else t("编辑作息方案", "Edit schedule"),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
+                title = if (isNew) t("新建作息方案", "New schedule") else t("编辑作息方案", "Edit schedule"),
                 actions = {
                     TextButton(onClick = saveAction) {
                         Text(t("保存", "Save"), fontWeight = FontWeight.Bold)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
             )
         },
     ) { innerPadding ->
@@ -798,7 +769,7 @@ fun SchemeEditScreen(
                 ClassTimesCard {
                     Text(
                         text = t("方案与校区基础设置", "Schedule and campus"),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = AppTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     OutlinedTextField(
@@ -808,7 +779,7 @@ fun SchemeEditScreen(
                         placeholder = { Text(t("例如：第一教学楼、实验楼、图书馆", "e.g. Teaching Building 1, Lab, Library")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = AppTheme.shapes.medium,
                     )
                     OutlinedTextField(
                         value = campus,
@@ -817,7 +788,7 @@ fun SchemeEditScreen(
                         placeholder = { Text(t("例如：主校区、东校区、南校区", "e.g. Main Campus, East Campus, South Campus")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = AppTheme.shapes.medium,
                     )
                     if (allCampuses.isNotEmpty()) {
                         Row(
@@ -843,7 +814,7 @@ fun SchemeEditScreen(
                 ClassTimesCard {
                     Text(
                         text = t("各节次起止时间", "Period start and end times"),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = AppTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     periodTimes.forEachIndexed { idx, (start, end) ->
@@ -860,21 +831,21 @@ fun SchemeEditScreen(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    color = AppTheme.colorScheme.secondaryContainer,
                                     modifier = Modifier.size(28.dp),
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
                                             text = "$slot",
-                                            style = MaterialTheme.typography.labelMedium,
+                                            style = AppTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            color = AppTheme.colorScheme.onSecondaryContainer,
                                         )
                                     }
                                 }
                                 Text(
                                     text = t("第 $slot 节", "Period $slot"),
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = AppTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                 )
                             }
@@ -897,9 +868,9 @@ fun SchemeEditScreen(
                                     trailingIcon = {
                                         IconButton(onClick = { onPickTime(idx, true) }) {
                                             Icon(
-                                                imageVector = Icons.Outlined.Schedule,
+                                                imageVector = AppIcons.Schedule,
                                                 contentDescription = t("选择第 $slot 节开始时间", "Select start time for period $slot"),
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = AppTheme.colorScheme.primary,
                                             )
                                         }
                                     },
@@ -918,9 +889,9 @@ fun SchemeEditScreen(
                                     trailingIcon = {
                                         IconButton(onClick = { onPickTime(idx, false) }) {
                                             Icon(
-                                                imageVector = Icons.Outlined.Schedule,
+                                                imageVector = AppIcons.Schedule,
                                                 contentDescription = t("选择第 $slot 节结束时间", "Select end time for period $slot"),
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = AppTheme.colorScheme.primary,
                                             )
                                         }
                                     },
@@ -930,7 +901,7 @@ fun SchemeEditScreen(
                         if (idx < periodTimes.size - 1) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 4.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             )
                         }
                     }
@@ -942,7 +913,7 @@ fun SchemeEditScreen(
                 Button(
                     onClick = saveAction,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
+                    shape = AppTheme.shapes.medium,
                 ) {
                     Text(t("保存作息方案", "Save schedule"))
                 }
@@ -957,7 +928,7 @@ fun SchemeEditScreen(
                             onBack()
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppTheme.colorScheme.error),
                     ) {
                         Text(t("删除此作息方案", "Delete this schedule"))
                     }
@@ -980,7 +951,7 @@ private fun ImportJsonDialog(
         title = {
             Text(
                 text = t("导入作息配置 JSON", "Import schedule JSON"),
-                style = MaterialTheme.typography.titleMedium,
+                style = AppTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -991,8 +962,8 @@ private fun ImportJsonDialog(
                         "粘贴包含 schemes 及 periods 的作息规范 JSON，系统将动态更新各校区时段与楼栋匹配规则：",
                         "Paste schedule JSON containing schemes and periods to update campus times and building matching:",
                     ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
 
                 FilledTonalButton(
@@ -1003,7 +974,7 @@ private fun ImportJsonDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(imageVector = Icons.Outlined.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = AppIcons.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(t("从剪贴板粘贴", "Paste from clipboard"))
                 }
@@ -1016,7 +987,7 @@ private fun ImportJsonDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp),
-                    textStyle = MaterialTheme.typography.bodySmall,
+                    textStyle = AppTheme.typography.bodySmall,
                 )
             }
         },
@@ -1041,9 +1012,9 @@ private fun ClassTimesCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = AppTheme.colorScheme.surfaceContainerLow,
         ),
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.medium,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -1064,7 +1035,7 @@ private fun ClassTimesSettingRow(
 ) {
     val rowModifier = Modifier
         .fillMaxWidth()
-        .clip(MaterialTheme.shapes.small)
+        .clip(AppTheme.shapes.small)
         .then(
             if (onClick != null) {
                 Modifier.clickable(onClick = onClick)
@@ -1083,14 +1054,14 @@ private fun ClassTimesSettingRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
         }
         Column(Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = AppTheme.typography.titleMedium.copy(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                 ),
@@ -1098,8 +1069,8 @@ private fun ClassTimesSettingRow(
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

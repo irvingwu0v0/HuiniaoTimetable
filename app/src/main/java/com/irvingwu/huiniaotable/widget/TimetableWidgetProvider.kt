@@ -37,7 +37,7 @@ private data class TimeRange(val start: LocalTime, val end: LocalTime)
 /**
  * 「今日课表」桌面控件。
  *
- * 采用 RemoteViews 实现，不依赖 Compose；配色直接引用系统的 Material You 动态取色
+ * 采用 RemoteViews 实现，不依赖 Compose；配色直接引用系统的动态取色
  * 语义色（壁纸配色），与 App 内的 dynamicLight/DarkColorScheme 同源，浅色/深色自适应。
  *
  * 三种课程状态：

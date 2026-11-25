@@ -1,17 +1,19 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.irvingwu.huiniaotable.ui.compat.DropdownMenu
+import com.irvingwu.huiniaotable.ui.compat.DropdownMenuItem
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
+import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import com.irvingwu.huiniaotable.data.HolidayRegion
 import com.irvingwu.huiniaotable.data.HolidaySource
-import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,38 +26,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.EditCalendar
-import androidx.compose.material.icons.outlined.HolidayVillage
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.ViewWeek
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.Button
+import com.irvingwu.huiniaotable.ui.compat.Card
+import com.irvingwu.huiniaotable.ui.compat.CardDefaults
+import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
+import com.irvingwu.huiniaotable.ui.compat.FilterChip
+import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.IconButton
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
+import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
+import com.irvingwu.huiniaotable.ui.compat.Scaffold
+import com.irvingwu.huiniaotable.ui.compat.SegmentedButton
+import com.irvingwu.huiniaotable.ui.compat.SegmentedButtonDefaults
+import com.irvingwu.huiniaotable.ui.compat.SingleChoiceSegmentedButtonRow
+import com.irvingwu.huiniaotable.ui.compat.Surface
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -97,7 +86,6 @@ private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy
  * 3. 调休补课星期独立校准；
  * 4. 自定义休假与调休教学日添加与删除。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HolidaysScreen(
     state: AppState,
@@ -201,27 +189,18 @@ fun HolidaysScreen(
         )
     }
 
-    Scaffold(
+    MiuixScaffold(
         topBar = {
-            TopAppBar(
+            MiuixTopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    MiuixIconButton(onClick = onBack) {
+                        MiuixIcon(
+                            imageVector = AppIcons.ArrowBack,
                             contentDescription = t("返回", "Back"),
                         )
                     }
                 },
-                title = {
-                    Text(
-                        text = t("节假日与调休编排", "Holidays and makeup days"),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
+                title = t("节假日与调休编排", "Holidays and makeup days"),
             )
         },
     ) { innerPadding ->
@@ -236,7 +215,7 @@ fun HolidaysScreen(
             item {
                 HolidaysCard {
                     HolidaysSettingRow(
-                        icon = Icons.Outlined.ViewWeek,
+                        icon = AppIcons.ViewWeek,
                         title = t("周末列展示模式", "Weekend display"),
                         subtitle = when (state.weekendMode) {
                             WeekendMode.Auto -> t("按排课与调休智能显示周末", "Show weekends when classes or makeup days require it")
@@ -276,7 +255,7 @@ fun HolidaysScreen(
 
                     Box {
                         HolidaysSettingRow(
-                            icon = Icons.Outlined.Place,
+                            icon = AppIcons.Place,
                             title = t("选择放假方案", "Holiday schedule"),
                             subtitle = state.holidayRegion.displayName,
                             onClick = { showRegionDropdown = true },
@@ -287,13 +266,13 @@ fun HolidaysScreen(
                                 ) {
                                     Text(
                                         text = state.holidayRegion.displayName,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
+                                        style = AppTheme.typography.bodyMedium,
+                                        color = AppTheme.colorScheme.primary,
                                     )
                                     Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
+                                        imageVector = AppIcons.ArrowDropDown,
                                         contentDescription = t("选择自治区放假安排", "Select regional holiday data"),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        tint = AppTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             },
@@ -309,15 +288,15 @@ fun HolidaysScreen(
                                         Text(
                                             text = region.displayName,
                                             fontWeight = if (state.holidayRegion == region) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (state.holidayRegion == region) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                            color = if (state.holidayRegion == region) AppTheme.colorScheme.primary else AppTheme.colorScheme.onSurface,
                                         )
                                     },
                                     leadingIcon = if (state.holidayRegion == region) {
                                         {
                                             Icon(
-                                                imageVector = Icons.Outlined.Check,
+                                                imageVector = AppIcons.Check,
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = AppTheme.colorScheme.primary,
                                                 modifier = Modifier.size(18.dp),
                                             )
                                         }
@@ -333,14 +312,14 @@ fun HolidaysScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     )
 
                     var showSourceDropdown by remember { mutableStateOf(false) }
 
                     Box {
                         HolidaysSettingRow(
-                            icon = Icons.Outlined.Dns,
+                            icon = AppIcons.Dns,
                             title = t("数据同步源", "Data source"),
                             subtitle = when (state.holidaySource) {
                                 HolidaySource.CUSTOM -> if (state.holidayCustomMirror.isNotBlank()) {
@@ -358,13 +337,13 @@ fun HolidaysScreen(
                                 ) {
                                     Text(
                                         text = state.holidaySource.displayName,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
+                                        style = AppTheme.typography.bodyMedium,
+                                        color = AppTheme.colorScheme.primary,
                                     )
                                     Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
+                                        imageVector = AppIcons.ArrowDropDown,
                                         contentDescription = t("选择数据同步源", "Select data source"),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        tint = AppTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             },
@@ -381,21 +360,21 @@ fun HolidaysScreen(
                                             Text(
                                                 text = source.displayName,
                                                 fontWeight = if (state.holidaySource == source) FontWeight.SemiBold else FontWeight.Normal,
-                                                color = if (state.holidaySource == source) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                                color = if (state.holidaySource == source) AppTheme.colorScheme.primary else AppTheme.colorScheme.onSurface,
                                             )
                                             Text(
                                                 text = source.description,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                style = AppTheme.typography.bodySmall,
+                                                color = AppTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
                                     },
                                     leadingIcon = if (state.holidaySource == source) {
                                         {
                                             Icon(
-                                                imageVector = Icons.Outlined.Check,
+                                                imageVector = AppIcons.Check,
                                                 contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = AppTheme.colorScheme.primary,
                                                 modifier = Modifier.size(18.dp),
                                             )
                                         }
@@ -415,17 +394,17 @@ fun HolidaysScreen(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     )
                     HolidaysSettingRow(
-                        icon = Icons.Outlined.HolidayVillage,
+                        icon = AppIcons.HolidayVillage,
                         title = t("法定节假日数据状态", "Public holiday data"),
                         subtitle = state.holidays?.let {
                             t("已加载 ${it.days.size} 个公历节假日及调休节点", "${it.days.size} holiday and makeup days loaded")
                         } ?: t("未加载法定假日数据", "No holiday data loaded"),
                     )
                     HolidaysSettingRow(
-                        icon = Icons.Outlined.Sync,
+                        icon = AppIcons.Sync,
                         title = t("节假日数据更新时间", "Holiday data updated"),
                         subtitle = formatTime(state.holidayFetchedAt),
                     )
@@ -435,7 +414,7 @@ fun HolidaysScreen(
                             .fillMaxWidth()
                             .padding(top = 4.dp),
                     ) {
-                        Icon(imageVector = Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = AppIcons.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(t("同步最新法定放假及调休安排", "Sync latest holidays and makeup days"))
                     }
@@ -458,21 +437,21 @@ fun HolidaysScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Outlined.DateRange,
+                                        imageVector = AppIcons.DateRange,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = AppTheme.colorScheme.primary,
                                         modifier = Modifier.size(20.dp),
                                     )
                                     Text(
                                         text = festival.name,
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = AppTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = AppTheme.colorScheme.primary,
                                     )
                                 }
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    color = AppTheme.colorScheme.secondaryContainer,
                                 ) {
                                     Text(
                                         text = t(
@@ -481,8 +460,8 @@ fun HolidaysScreen(
                                             "${festival.offDays.size} days off" +
                                                 if (festival.makeupDays.isNotEmpty()) " · ${festival.makeupDays.size} makeup days" else "",
                                         ),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        style = AppTheme.typography.labelSmall,
+                                        color = AppTheme.colorScheme.onSecondaryContainer,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                     )
                                 }
@@ -499,8 +478,8 @@ fun HolidaysScreen(
                                 }
                                 Text(
                                     text = t("放假安排：$dateSpan（全天停课放假）", "Holiday: $dateSpan (no classes)"),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = AppTheme.typography.bodySmall,
+                                    color = AppTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(top = 2.dp),
                                 )
                             }
@@ -509,12 +488,12 @@ fun HolidaysScreen(
                             if (festival.makeupDays.isNotEmpty()) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 4.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                    color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 )
                                 Text(
                                     text = t("调休补课安排（轻触可校准对应补课星期）：", "Makeup classes (tap to choose the weekday):"),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = AppTheme.typography.labelSmall,
+                                    color = AppTheme.colorScheme.onSurfaceVariant,
                                 )
                                 festival.makeupDays.forEach { day ->
                                     val weekday = MakeupGuesser.weekdayLabel(day.date.dayOfWeek.value)
@@ -522,7 +501,7 @@ fun HolidaysScreen(
                                     val isOverridden = state.makeupOverrides.containsKey(day.date)
 
                                     HolidaysSettingRow(
-                                        icon = Icons.Outlined.EditCalendar,
+                                        icon = AppIcons.EditCalendar,
                                         title = "${day.date.format(dateFormatter)} ($weekday)",
                                         subtitle = when (currentTarget) {
                                             null, 0 -> t("调休上班 · 不执行补课", "Workday · no makeup classes")
@@ -535,7 +514,7 @@ fun HolidaysScreen(
                                         trailing = {
                                             Surface(
                                                 shape = RoundedCornerShape(6.dp),
-                                                color = if (isOverridden) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                color = if (isOverridden) AppTheme.colorScheme.primaryContainer else AppTheme.colorScheme.surfaceContainerHighest,
                                             ) {
                                                 Row(
                                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -550,15 +529,15 @@ fun HolidaysScreen(
                                                                 "Makeup: ${MakeupGuesser.weekdayLabel(currentTarget)}",
                                                             )
                                                         },
-                                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                                        style = AppTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                                         fontWeight = FontWeight.Medium,
-                                                        color = if (isOverridden) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        color = if (isOverridden) AppTheme.colorScheme.onPrimaryContainer else AppTheme.colorScheme.onSurfaceVariant,
                                                     )
                                                     Icon(
-                                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                                        imageVector = AppIcons.KeyboardArrowRight,
                                                         contentDescription = null,
                                                         modifier = Modifier.size(14.dp),
-                                                        tint = if (isOverridden) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        tint = if (isOverridden) AppTheme.colorScheme.onPrimaryContainer else AppTheme.colorScheme.onSurfaceVariant,
                                                     )
                                                 }
                                             }
@@ -581,8 +560,8 @@ fun HolidaysScreen(
                     ) {
                         Text(
                             text = t("校级调休或个性化放假：", "School-specific holidays or makeup days:"),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = AppTheme.typography.bodySmall,
+                            color = AppTheme.colorScheme.onSurfaceVariant,
                         )
                         OutlinedButton(
                             onClick = {
@@ -590,7 +569,7 @@ fun HolidaysScreen(
                                 showOverrideDatePicker = true
                             },
                         ) {
-                            Icon(imageVector = Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = AppIcons.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(t("添加自定义安排", "Add custom day"))
                         }
@@ -603,14 +582,14 @@ fun HolidaysScreen(
                                 "暂无自定义节假日，系统完全依据法定公共假期运行。",
                                 "No custom holidays. The app follows the official public holiday schedule.",
                             ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
+                            style = AppTheme.typography.bodySmall,
+                            color = AppTheme.colorScheme.outline,
                         )
                     } else {
                         state.holidayOverrides.forEach { item ->
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 4.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant,
+                                color = AppTheme.colorScheme.outlineVariant,
                             )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -618,15 +597,15 @@ fun HolidaysScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.DateRange,
+                                    imageVector = AppIcons.DateRange,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = AppTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp),
                                 )
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "${item.date.format(dateFormatter)} · ${item.name}",
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = AppTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
                                     )
                                     Text(
@@ -635,13 +614,13 @@ fun HolidaysScreen(
                                         } else {
                                             t("调休教学日", "Makeup school day")
                                         },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (item.isOffDay) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                                        style = AppTheme.typography.bodySmall,
+                                        color = if (item.isOffDay) AppTheme.colorScheme.primary else AppTheme.colorScheme.tertiary,
                                     )
                                 }
                                 IconButton(onClick = { onRemoveHolidayOverride(item.date) }) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Close,
+                                        imageVector = AppIcons.Close,
                                         contentDescription = t("删除", "Delete"),
                                         modifier = Modifier.size(18.dp),
                                     )
@@ -669,7 +648,7 @@ private fun CustomHolidayDialog(
         title = {
             Text(
                 text = t("配置日期：${date.format(dateFormatter)}", "Date: ${date.format(dateFormatter)}"),
-                style = MaterialTheme.typography.titleMedium,
+                style = AppTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -686,8 +665,8 @@ private fun CustomHolidayDialog(
 
                 Text(
                     text = t("日程属性设定：", "Day type:"),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.labelMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -721,9 +700,9 @@ private fun CustomHolidayDialog(
 private fun HolidaysSectionTitle(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.titleSmall,
+        style = AppTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary,
+        color = AppTheme.colorScheme.primary,
         modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
     )
 }
@@ -733,9 +712,9 @@ private fun HolidaysCard(content: @Composable () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = AppTheme.colorScheme.surfaceContainerLow,
         ),
-        shape = MaterialTheme.shapes.medium,
+        shape = AppTheme.shapes.medium,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -756,7 +735,7 @@ private fun HolidaysSettingRow(
 ) {
     val rowModifier = Modifier
         .fillMaxWidth()
-        .clip(MaterialTheme.shapes.small)
+        .clip(AppTheme.shapes.small)
         .then(
             if (onClick != null) {
                 Modifier.clickable(onClick = onClick)
@@ -775,14 +754,14 @@ private fun HolidaysSettingRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
         }
         Column(Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = AppTheme.typography.titleMedium.copy(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                 ),
@@ -790,8 +769,8 @@ private fun HolidaysSettingRow(
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -816,7 +795,7 @@ private fun CustomMirrorDialog(
         title = {
             Text(
                 text = t("自定义数据源 / ghproxy", "Custom source / ghproxy"),
-                style = MaterialTheme.typography.titleMedium,
+                style = AppTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -827,8 +806,8 @@ private fun CustomMirrorDialog(
                         "支持输入自建 ghproxy 代理前缀或完整的 holiday-cn 镜像仓库根地址：",
                         "Enter a self-hosted ghproxy prefix or the root URL of a holiday-cn mirror:",
                     ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.bodySmall,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = text,
@@ -882,16 +861,16 @@ private fun MakeupDayDialog(
         onDismissRequest = onDismiss,
         icon = {
             Icon(
-                imageVector = Icons.Outlined.EditCalendar,
+                imageVector = AppIcons.EditCalendar,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = AppTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp),
             )
         },
         title = {
             Text(
                 text = t("${date.format(dateFormatter)} 调休安排", "${date.format(dateFormatter)} makeup arrangement"),
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -902,8 +881,8 @@ private fun MakeupDayDialog(
             ) {
                 Text(
                     text = t("选择对应补课星期：", "Choose the weekday to follow:"),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = AppTheme.typography.labelMedium,
+                    color = AppTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -913,8 +892,8 @@ private fun MakeupDayDialog(
                         val selected = (currentTarget == code)
                         Surface(
                             onClick = { onSelectWeekday(code) },
-                            shape = MaterialTheme.shapes.small,
-                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = AppTheme.shapes.small,
+                            color = if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.surfaceContainerHighest,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp),
@@ -922,9 +901,9 @@ private fun MakeupDayDialog(
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = name,
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = AppTheme.typography.labelLarge,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    color = if (selected) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -938,8 +917,8 @@ private fun MakeupDayDialog(
                         val selected = (currentTarget == code)
                         Surface(
                             onClick = { onSelectWeekday(code) },
-                            shape = MaterialTheme.shapes.small,
-                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = AppTheme.shapes.small,
+                            color = if (selected) AppTheme.colorScheme.primary else AppTheme.colorScheme.surfaceContainerHighest,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp),
@@ -947,9 +926,9 @@ private fun MakeupDayDialog(
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = name,
-                                    style = MaterialTheme.typography.labelLarge,
+                                    style = AppTheme.typography.labelLarge,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    color = if (selected) AppTheme.colorScheme.onPrimary else AppTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -958,7 +937,7 @@ private fun MakeupDayDialog(
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                 )
 
                 Row(

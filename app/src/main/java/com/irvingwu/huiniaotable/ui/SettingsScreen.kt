@@ -1,5 +1,7 @@
 package com.irvingwu.huiniaotable.ui
 
+import com.irvingwu.huiniaotable.ui.icons.AppIcons
+
 import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -7,11 +9,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import com.irvingwu.huiniaotable.ui.compat.DropdownMenu
+import com.irvingwu.huiniaotable.ui.compat.DropdownMenuItem
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.irvingwu.huiniaotable.data.HolidayRegion
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,37 +32,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.EditCalendar
-import androidx.compose.material.icons.outlined.HolidayVillage
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.LockReset
-import androidx.compose.material.icons.outlined.Nightlight
-import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.School
-import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.Button
+import com.irvingwu.huiniaotable.ui.compat.Card
+import com.irvingwu.huiniaotable.ui.compat.CardDefaults
+import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
+import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
+import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
+import com.irvingwu.huiniaotable.ui.compat.Surface
+import com.irvingwu.huiniaotable.ui.compat.Switch
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,9 +81,8 @@ private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy
 private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
 /**
- * 「系统设置」页面：严格依从 Google Material You (Material 3) 设计规范。
+ * 「系统设置」页面：严格依从 Miuix / HyperOS 设计规范。
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContent(
     state: AppState,
@@ -136,7 +123,7 @@ fun SettingsContent(
     // 学期选择单选对话框
     if (showTermDialog) {
         SingleChoiceDialog(
-            icon = Icons.Outlined.School,
+            icon = AppIcons.School,
             title = t("选择生效学期", "Select semester"),
             items = state.terms,
             selectedItem = state.terms.firstOrNull { it.value == state.term },
@@ -167,7 +154,7 @@ fun SettingsContent(
             title = {
                 Text(
                     text = t("配置教务系统网址", "Academic system URL"),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = AppTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
             },
@@ -175,8 +162,8 @@ fun SettingsContent(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = t("输入您所在高校的强智教务系统入口网址：", "Enter your university's academic system URL:"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = AppTheme.typography.bodySmall,
+                        color = AppTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = urlInput,
@@ -215,29 +202,21 @@ fun SettingsContent(
         item {
             SettingsCard {
                 SettingRow(
-                    icon = Icons.Outlined.AccountCircle,
+                    icon = AppIcons.AccountCircle,
                     title = t("统一认证学号", "Student ID"),
                     subtitle = state.studentId.ifBlank { t("未建立有效教务会话", "No active academic session") },
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
                 SettingRow(
-                    icon = Icons.Outlined.Language,
+                    icon = AppIcons.Language,
                     title = t("教务系统网址", "Academic system URL"),
                     subtitle = state.jwxtBaseUrl.ifBlank { t("未配置教务系统网址", "Academic system URL not configured") },
                     onClick = { showJwxtDialog = true },
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
                 )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
                 if (!state.loggedIn) {
                     SettingRow(
-                        icon = Icons.Outlined.LockReset,
+                        icon = AppIcons.LockReset,
                         title = t("凭据鉴权已失效", "Sign-in expired"),
                         subtitle = t("当前展示离线课表，请重新登录鉴权", "Showing the offline timetable. Sign in again."),
                         onClick = onLogin,
@@ -251,21 +230,11 @@ fun SettingsContent(
                         Text(t("重新登入教务系统", "Sign in again"))
                     }
                 }
-                OutlinedButton(
+                MiuixTextButton(
+                    text = t("退出当前账户并清除本地凭据", "Sign out and clear local credentials"),
                     onClick = onLogout,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Logout,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(t("退出当前账户并清除本地凭据", "Sign out and clear local credentials"), color = MaterialTheme.colorScheme.error)
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
 
@@ -273,42 +242,16 @@ fun SettingsContent(
         item {
             SettingsCard {
                 SettingRow(
-                    icon = Icons.Outlined.School,
+                    icon = AppIcons.School,
                     title = t("当前生效学期", "Active semester"),
                     subtitle = state.term.ifBlank { t("教务系统缺省当前学期", "Academic system default") },
                     onClick = if (state.terms.size > 1) { { showTermDialog = true } } else null,
-                    trailing = if (state.terms.size > 1) {
-                        {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    Text(
-                                        text = t("切换", "Change"),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                            }
-                        }
-                    } else null,
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                 SettingRow(
-                    icon = Icons.Outlined.CalendarMonth,
+                    icon = AppIcons.CalendarMonth,
                     title = t("学期开学首周基准日", "Term start date"),
                     subtitle = state.termStart?.let {
                         t(
@@ -317,36 +260,20 @@ fun SettingsContent(
                         )
                     } ?: t("未设定基准日期", "Start date not set"),
                     onClick = { showStartPicker = true },
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                 SettingRow(
-                    icon = Icons.Outlined.Sync,
+                    icon = AppIcons.Sync,
                     title = t("课表最近同步时间", "Last timetable sync"),
                     subtitle = formatTime(state.fetchedAt),
                 )
-                FilledTonalButton(
+                Button(
                     onClick = onRefresh,
                     enabled = !state.refreshing,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Sync,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
                     Text(
                         if (state.refreshing) {
                             t("正在同步教务系统…", "Syncing academic system…")
@@ -362,18 +289,10 @@ fun SettingsContent(
         item {
             SettingsCard {
                 SettingRow(
-                    icon = Icons.Outlined.Schedule,
+                    icon = AppIcons.Schedule,
                     title = t("作息方案与校区楼宇设置", "Schedules, campuses and buildings"),
                     subtitle = "${state.scheduleConfigName} · ${state.campus.label} · ${state.timeTable.label}",
                     onClick = onOpenClassTimes,
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
                 )
             }
         }
@@ -382,7 +301,7 @@ fun SettingsContent(
         item {
             SettingsCard {
                 SettingRow(
-                    icon = Icons.Outlined.HolidayVillage,
+                    icon = AppIcons.HolidayVillage,
                     title = t("节假日与调休编排", "Holidays and makeup days"),
                     subtitle = when (state.weekendMode) {
                         WeekendMode.Auto -> t("周末智能判定", "Smart weekend display")
@@ -390,14 +309,6 @@ fun SettingsContent(
                         WeekendMode.Hide -> t("仅展示工作日", "Weekdays only")
                     } + if (state.holidayRegion != HolidayRegion.NONE) " · ${state.holidayRegion.displayName}" else "",
                     onClick = onOpenHolidays,
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
                 )
             }
         }
@@ -405,20 +316,16 @@ fun SettingsContent(
         // ---- 课表显示 ----
         item {
             SettingsCard {
-                SettingRow(
-                    icon = Icons.Outlined.Nightlight,
+                SwitchPreference(
+                    checked = state.hideEvening,
+                    onCheckedChange = onHideEvening,
                     title = t("隐藏晚自习（最后两节）", "Hide evening classes (last two periods)"),
-                    subtitle = if (state.hideEvening) {
+                    summary = if (state.hideEvening) {
                         t("课表已隐藏最后两节时段", "The last two periods are hidden")
                     } else {
                         t("课表完整显示全部节次", "All periods are shown")
                     },
-                    trailing = {
-                        Switch(
-                            checked = state.hideEvening,
-                            onCheckedChange = onHideEvening,
-                        )
-                    },
+                    startAction = prefIcon(AppIcons.Nightlight),
                 )
             }
         }
@@ -426,33 +333,21 @@ fun SettingsContent(
         // ---- 通知与系统日程 ----
         item {
             SettingsCard {
-                SettingRow(
-                    icon = Icons.Outlined.NotificationsActive,
+                SwitchPreference(
+                    checked = state.classNotify,
+                    onCheckedChange = onClassNotify,
                     title = t("上课实时通知（Live Updates）", "Live class updates"),
-                    subtitle = t("课前 15 分钟提醒与上课常驻进度", "15-minute reminders and live class progress"),
-                    trailing = {
-                        Switch(
-                            checked = state.classNotify,
-                            onCheckedChange = onClassNotify,
-                        )
-                    },
+                    summary = t("课前 15 分钟提醒与上课常驻进度", "15-minute reminders and live class progress"),
+                    startAction = prefIcon(AppIcons.NotificationsActive),
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                 SettingRow(
-                    icon = Icons.Outlined.EditCalendar,
+                    icon = AppIcons.EditCalendar,
                     title = t("一键写入系统日程", "Add all classes to calendar"),
                     subtitle = t("将当前学期全部排课写入手机系统日历", "Write this semester's classes to the system calendar"),
                     onClick = onSyncCalendar,
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
                 )
             }
         }
@@ -460,21 +355,17 @@ fun SettingsContent(
         // ---- 视觉与主题规范 ----
         item {
             SettingsCard {
-                SettingRow(
-                    icon = Icons.Outlined.Palette,
-                    title = t("Material You 动态色彩体系", "Material You dynamic colour"),
-                    subtitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                SwitchPreference(
+                    checked = state.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+                    onCheckedChange = onDynamicColor,
+                    title = t("系统动态取色（Monet）", "System dynamic colour (Monet)"),
+                    summary = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         t("跟随系统壁纸基色自动变色", "Colours follow the system wallpaper")
                     } else {
                         t("低于 Android 12，采用默认基准色", "Android 12+ is required; using the default palette")
                     },
-                    trailing = {
-                        Switch(
-                            checked = state.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
-                            enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
-                            onCheckedChange = onDynamicColor,
-                        )
-                    },
+                    startAction = prefIcon(AppIcons.Palette),
+        enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
                 )
 
 
@@ -491,7 +382,7 @@ fun SettingsContent(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = AppTheme.colorScheme.surfaceContainerHigh,
                         modifier = Modifier
                             .size(54.dp)
                             .clickable(
@@ -536,22 +427,22 @@ fun SettingsContent(
                     Column {
                         Text(
                             text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = AppTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = t("版本 $versionName", "Version $versionName"),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = AppTheme.typography.bodyMedium,
+                            color = AppTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
                 Spacer(Modifier.height(10.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
                 SettingRow(
-                    icon = Icons.Outlined.Shield,
+                    icon = AppIcons.Shield,
                     title = t("本地离线沙盒安全保障", "Local secure storage"),
                     subtitle = t("凭据由硬件 KeyStore 加密存储，无云端中转", "Credentials are encrypted with hardware-backed KeyStore"),
                 )
@@ -562,20 +453,22 @@ fun SettingsContent(
 
 @Composable
 private fun SettingsCard(content: @Composable () -> Unit) {
-    Card(
+    MiuixCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        shape = MaterialTheme.shapes.medium,
+        cornerRadius = 16.dp,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            content()
-        }
+        content()
     }
+}
+
+/** Miuix Preference 左侧图标的统一写法。 */
+private fun prefIcon(vector: ImageVector): @Composable () -> Unit = {
+    MiuixIcon(
+        imageVector = vector,
+        contentDescription = null,
+        tint = MiuixTheme.colorScheme.primary,
+        modifier = Modifier.size(22.dp),
+    )
 }
 
 @Composable
@@ -586,49 +479,24 @@ private fun SettingRow(
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val rowModifier = Modifier
-        .fillMaxWidth()
-        .clip(MaterialTheme.shapes.small)
-        .then(
-            if (onClick != null) {
-                Modifier.clickable(onClick = onClick)
-            } else {
-                Modifier
-            },
-        )
-        .padding(vertical = 8.dp, horizontal = 4.dp)
-
-    Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            )
-            if (!subtitle.isNullOrBlank()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    ArrowPreference(
+        title = title,
+        summary = subtitle?.takeIf { it.isNotBlank() },
+        onClick = onClick,
+        startAction = icon?.let { vector ->
+            {
+                MiuixIcon(
+                    imageVector = vector,
+                    contentDescription = null,
+                    tint = MiuixTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
                 )
             }
-        }
-        trailing?.invoke()
-    }
+        },
+        endActions = {
+            trailing?.invoke()
+        },
+    )
 }
 
 private fun formatTime(epochMillis: Long): String {

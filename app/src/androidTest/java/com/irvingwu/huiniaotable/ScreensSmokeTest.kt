@@ -1,6 +1,6 @@
 package com.irvingwu.huiniaotable
 
-import androidx.compose.material3.Surface
+import com.irvingwu.huiniaotable.ui.compat.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule

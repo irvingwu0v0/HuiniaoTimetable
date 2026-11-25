@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.irvingwu.huiniaotable.ui.compat.AlertDialog
+import com.irvingwu.huiniaotable.ui.compat.Icon
+import com.irvingwu.huiniaotable.ui.compat.AppTheme
+import com.irvingwu.huiniaotable.ui.compat.RadioButton
+import com.irvingwu.huiniaotable.ui.compat.Text
+import com.irvingwu.huiniaotable.ui.compat.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.irvingwu.huiniaotable.t
 
 /**
- * 符合 Google Material 3 规范的单选确认对话框。
+ * 单选确认对话框。
  *
  * 在 Android 原生系统设置与 Google 官方移动应用中，移动端选项型偏好一律采用带单选按钮的
  * 居中 Dialog（Single-Choice Dialog），遵循手指点按热区与视觉焦点的官方标准规范，
@@ -51,7 +51,7 @@ fun <T> SingleChoiceDialog(
                 Icon(
                     imageVector = it,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = AppTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -59,7 +59,7 @@ fun <T> SingleChoiceDialog(
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -75,7 +75,7 @@ fun <T> SingleChoiceDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
+                            .clip(AppTheme.shapes.small)
                             .selectable(
                                 selected = isSelected,
                                 onClick = {
@@ -95,19 +95,19 @@ fun <T> SingleChoiceDialog(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = itemTitle(item),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = AppTheme.typography.bodyLarge,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 color = if (isSelected) {
-                                    MaterialTheme.colorScheme.primary
+                                    AppTheme.colorScheme.primary
                                 } else {
-                                    MaterialTheme.colorScheme.onSurface
+                                    AppTheme.colorScheme.onSurface
                                 },
                             )
                             itemSubtitle?.invoke(item)?.let { sub ->
                                 Text(
                                     text = sub,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = AppTheme.typography.bodySmall,
+                                    color = AppTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -145,7 +145,7 @@ fun <T> GroupedSingleChoiceDialog(
                 Icon(
                     imageVector = it,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = AppTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -153,7 +153,7 @@ fun <T> GroupedSingleChoiceDialog(
         title = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge,
+                style = AppTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         },
@@ -168,9 +168,9 @@ fun <T> GroupedSingleChoiceDialog(
                     if (groupTitle.isNotBlank()) {
                         Text(
                             text = groupTitle,
-                            style = MaterialTheme.typography.labelLarge,
+                            style = AppTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = AppTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 8.dp, top = 10.dp, bottom = 4.dp),
                         )
                     }
@@ -179,7 +179,7 @@ fun <T> GroupedSingleChoiceDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.small)
+                                .clip(AppTheme.shapes.small)
                                 .selectable(
                                     selected = isSelected,
                                     onClick = {
@@ -198,12 +198,12 @@ fun <T> GroupedSingleChoiceDialog(
                             )
                             Text(
                                 text = itemTitle(item),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = AppTheme.typography.bodyLarge,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 color = if (isSelected) {
-                                    MaterialTheme.colorScheme.primary
+                                    AppTheme.colorScheme.primary
                                 } else {
-                                    MaterialTheme.colorScheme.onSurface
+                                    AppTheme.colorScheme.onSurface
                                 },
                                 modifier = Modifier.weight(1f),
                             )

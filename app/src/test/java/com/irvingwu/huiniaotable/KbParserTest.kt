@@ -159,4 +159,74 @@ class KbParserTest {
             runCatching { KbParser.parse("<html><body>请先登录</body></html>") }.exceptionOrNull(),
         )
     }
+
+    private val zhengfangHtml = """
+        <html><body>
+        <table id="kbtable">
+          <tr><th>节次</th><th>星期一</th><th>星期二</th></tr>
+          <tr><th>第1-2节</th>
+            <td>高等数学<br>1-16周<br>张三<br>一教101</td>
+            <td>大学英语<br>1-8周<br>李四<br>二教202</td>
+          </tr>
+          <tr><th>第3-4节</th>
+            <td>高等数学<br>1-16周<br>张三<br>一教101</td>
+            <td>数据结构<br>3-15周(单)<br>王五<br>三教303</td>
+          </tr>
+        </table>
+        </body></html>
+    """.trimIndent()
+
+    private val kingosoftHtml = """
+        <html><body>
+        <table id="Table1">
+          <tr><td>节次</td><td>周一</td><td>周二</td></tr>
+          <tr><td>第5-6节</td>
+            <td><span>线性代数</span><br><span>2-12周</span><br><span>赵六</span><br><span>四教404</span></td>
+            <td></td>
+          </tr>
+          <tr><td>第7-8节</td>
+            <td><span>线性代数</span><br><span>2-12周</span><br><span>赵六</span><br><span>四教404</span></td>
+            <td></td>
+          </tr>
+        </table>
+        </body></html>
+    """.trimIndent()
+
+    @Test
+    fun `识别正方课表并合并跨大节的同一门课`() {
+        val result = KbParser.parse(zhengfangHtml)
+        assertEquals(com.irvingwu.huiniaotable.data.SchoolFamily.Zhengfang, KbParser.detectFamily(zhengfangHtml))
+        val math = result.schedule.courses.first { it.name == "高等数学" }
+        assertEquals(1, math.startSlot)
+        assertEquals(4, math.endSlot)
+        assertEquals("张三", math.teacher)
+        assertEquals("一教101", math.room)
+        assertEquals((1..16).toList(), math.weeks)
+        assertEquals(1, result.schedule.courses.count { it.dayOfWeek == 1 })
+    }
+
+    @Test
+    fun `识别青果课表并按单双周拆分课程`() {
+        val result = KbParser.parse(kingosoftHtml)
+        assertEquals(com.irvingwu.huiniaotable.data.SchoolFamily.Kingosoft, KbParser.detectFamily(kingosoftHtml))
+        val linear = result.schedule.courses.first { it.name == "线性代数" }
+        assertEquals(5, linear.startSlot)
+        assertEquals(8, linear.endSlot)
+        assertEquals((2..12).toList(), linear.weeks)
+        assertEquals("四教404", linear.room)
+    }
+
+    @Test
+    fun `跨大节的三节课合并为一个连续方块`() {
+        val html = """
+            <table id="kbtable">
+              <tr><th>节次</th><th>星期一</th></tr>
+              <tr><th>第1-2节</th><td>实验课<br>1-16周<br>孙七<br>实验室1</td></tr>
+              <tr><th>第3-4节</th><td>实验课<br>1-16周<br>孙七<br>实验室1<br>[03节]</td></tr>
+            </table>
+        """.trimIndent()
+        val course = KbParser.parse(html).schedule.courses.single { it.name == "实验课" }
+        assertEquals(1, course.startSlot)
+        assertEquals(3, course.endSlot)
+    }
 }

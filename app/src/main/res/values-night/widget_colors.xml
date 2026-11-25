@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 桌面控件的 Material You 配色（深色），随系统深色模式自动切换。 -->
+<!-- 桌面控件的系统动态配色（深色），随系统深色模式自动切换。 -->
 <resources>
     <color name="widget_background">@android:color/system_surface_container_high_dark</color>
     <color name="widget_foreground">@android:color/system_on_surface_dark</color>
