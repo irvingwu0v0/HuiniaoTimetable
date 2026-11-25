@@ -8,14 +8,6 @@ class Prefs(context: Context) {
 
     private val sp = context.applicationContext.getSharedPreferences("huiniao_timetable", Context.MODE_PRIVATE)
 
-    var studentId: String
-        get() = sp.getString(KEY_STUDENT_ID, "").orEmpty()
-        set(value) = sp.edit().putString(KEY_STUDENT_ID, value).apply()
-
-    var passwordEncrypted: String?
-        get() = sp.getString(KEY_PASSWORD, null)
-        set(value) = sp.edit().putString(KEY_PASSWORD, value).apply()
-
     var scheduleJson: String?
         get() = sp.getString(KEY_SCHEDULE, null)
         set(value) = sp.edit().putString(KEY_SCHEDULE, value).apply()
@@ -120,19 +112,10 @@ class Prefs(context: Context) {
         get() = sp.getString(KEY_COURSE_PLACEMENTS, null)
         set(value) = sp.edit().putString(KEY_COURSE_PLACEMENTS, value).apply()
 
-    fun credentials(): Pair<String, String>? {
-        val id = studentId
-        val password = SecureStore.decrypt(passwordEncrypted)
-        return if (id.isNotBlank() && !password.isNullOrBlank()) id to password else null
-    }
-
-    fun saveCredentials(studentId: String, password: String) {
-        this.studentId = studentId
-        passwordEncrypted = SecureStore.encrypt(password)
-    }
-
-    fun clearCredentials() {
+    /** 清除已导入的课表缓存；历史版本遗留的账号/密码字段也一并清理。 */
+    fun clearSchedule() {
         sp.edit()
+            .remove(KEY_STUDENT_ID)
             .remove(KEY_PASSWORD)
             .remove(KEY_SCHEDULE)
             .remove(KEY_LAST_REFRESH_DAY)
@@ -146,8 +129,8 @@ class Prefs(context: Context) {
         private const val KEY_JWXT_BASE_URL = "jwxt_base_url"
         private const val KEY_SCHEDULE_CONFIG = "schedule_config_json"
 
-        const val KEY_STUDENT_ID = "student_id"
-        const val KEY_PASSWORD = "password_encrypted"
+        private const val KEY_STUDENT_ID = "student_id"
+        private const val KEY_PASSWORD = "password_encrypted"
         const val KEY_SCHEDULE = "schedule_json"
         const val KEY_LAST_REFRESH_DAY = "last_refresh_day"
         const val KEY_FETCHED_AT = "fetched_at"

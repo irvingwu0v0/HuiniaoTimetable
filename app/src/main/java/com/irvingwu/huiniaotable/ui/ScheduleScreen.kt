@@ -141,8 +141,7 @@ fun ScheduleContent(
     if (schedule == null || schedule.courses.isEmpty()) {
         EmptySchedulePlaceholder(
             hasData = schedule != null,
-            refreshing = state.refreshing,
-            onRefresh = onRefresh,
+            onImport = onRefresh,
         )
         return
     }
@@ -1767,8 +1766,7 @@ private fun DetailListItem(
 @Composable
 fun EmptySchedulePlaceholder(
     hasData: Boolean,
-    refreshing: Boolean,
-    onRefresh: () -> Unit,
+    onImport: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -1800,9 +1798,9 @@ fun EmptySchedulePlaceholder(
 
         Text(
             text = if (hasData) {
-                t("请轻触下方按钮同步最新教学计划", "Tap the button below to sync the latest schedule")
+                t("请轻触下方按钮从教务系统网页重新导入", "Tap the button below to import again from the academic system page")
             } else {
-                t("请验证统一身份凭据并同步教务系统课表", "Sign in and sync the timetable from your academic system")
+                t("请先在网页里登录教务系统，再导入课表", "Sign in to your academic system page, then import the timetable")
             },
             style = AppTheme.typography.bodyMedium,
             color = AppTheme.colorScheme.onSurfaceVariant,
@@ -1811,17 +1809,14 @@ fun EmptySchedulePlaceholder(
 
         Spacer(Modifier.height(24.dp))
 
-        FilledTonalButton(
-            onClick = onRefresh,
-            enabled = !refreshing,
-        ) {
+        FilledTonalButton(onClick = onImport) {
             Icon(
-                imageVector = AppIcons.Sync,
+                imageVector = AppIcons.Public,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text(if (refreshing) t("正在同步教务系统…", "Syncing academic system…") else t("同步课表数据", "Sync timetable"))
+            Text(t("打开网页登录导入课表", "Open web page to import"))
         }
     }
 }

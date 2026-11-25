@@ -1,6 +1,6 @@
 # 灰鸟课表 · HuiniaoTimetable
 
-灰鸟课表是一款遵循 **Miuix / HyperOS** 设计语言的现代高校 Android 课表客户端。支持通用高校教务系统端点自由配置、统一身份认证登录、自动抓取与本地缓存、多校区/多楼宇作息时间管理、全学期系统日历同步、以及 Android 16 胶囊锁屏上课实时更新通知（Live Updates）。
+灰鸟课表是一款遵循 **Miuix / HyperOS** 设计语言的现代高校 Android 课表客户端。支持教务系统网页登录导入、自动识别多家教务系统、课表本地缓存、多校区/多楼宇作息时间管理、全学期系统日历同步、以及 Android 16 胶囊锁屏上课实时更新通知（Live Updates）。
 
 [![Platform](https://img.shields.io/badge/Platform-Android%2010%2B-brightgreen.svg)](https://developer.android.com/)
 [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
@@ -46,8 +46,8 @@
 - **桌面今日课表组件**：采用系统动态取色，支持横竖自由缩放拉伸，已结课程灰色弱化、正在进行或下一节高亮强调，跨节次自动刷新。
 
 ### 7. 隐私安全与开发者调试
-- **本地硬件安全隔离**：用户学号与密码仅存储在本地设备私有沙盒中，密码通过 **Android KeyStore** 硬件密钥（AES-GCM-256）加密保护。
-- **端点自由配置**：支持配置您所在高校的强智/通用教务系统端点 URL，无任何第三方中心服务器或隐私收集。
+- **零凭据存储**：登录在 WebView 中完成，App 不保存学号与密码，只保留解析后的课表与教务系统网址。
+- **网址自由配置**：支持填写所在高校的教务系统网址，无任何第三方中心服务器或隐私收集。
 - **开发者调试模式**：在设置页面连续点击应用图标 10 次，解锁开发者面板，可立即触发 Live Updates 实时通知预览，便于离线测试与调试。
 
 ---
@@ -64,7 +64,7 @@
 
 ### 网页登录导入课表
 
-在登录页点「网页登录导入」，填入学校教务系统网址（例如 `https://jwxt.example.edu.cn/jsxsd/`），在 WebView 里完成验证码 / 统一身份认证等网页登录流程。登录成功后会自动尝试跳转课表页，停留在「课表」页面点「导入当前页面课表」即可解析并保存，全程不在 App 内重复保存账号密码。
+在欢迎页点「打开教务系统网页登录」，填入学校教务系统网址（例如 `https://jwxt.example.edu.cn/jsxsd/`），在 WebView 里完成验证码 / 统一身份认证等网页登录流程。登录成功后会自动尝试跳转课表页，停留在「课表」页面点「导入当前页面课表」即可解析并保存，全程不在 App 内重复保存账号密码。
 
 - 自动识别强智、正方、青果等常见教务系统页面并选择合适的解析策略，其余结构走通用表格解析。
 - 课表按时段逐节绘制：1 节课只占半格，同门课连续的 2–3 节保持一个完整方块，跨「大节」也会连续显示。
@@ -103,12 +103,10 @@ app/src/main/java/com/irvingwu/huiniaotable/
 │   ├── ClassTimes.kt            # 作息方案管理、楼栋智能匹配与 JSON 导入导出
 │   ├── HolidayClient.kt         # 节假日与调休远端检索（全国/自治区）
 │   ├── HttpClient.kt            # 网络通信基础层与会话 Cookie 隔离
-│   ├── JwxtClient.kt            # 高校教务系统接口协议对接
 │   ├── KbParser.kt              # 课表 HTML 结构解析器
 │   ├── MakeupGuesser.kt         # 调休补周几推算逻辑
 │   ├── Models.kt                # 核心数据模型与状态封装
 │   ├── Prefs.kt                 # 用户偏好与本地存储
-│   ├── SecureStore.kt           # Android KeyStore 硬件加密存储
 │   ├── TeacherNames.kt          # 教师姓名清洗与职称剔除
 │   └── TimetableRepository.kt   # 统一仓库状态流与生命周期管理
 ├── notify/                       # 通知层
@@ -122,7 +120,8 @@ app/src/main/java/com/irvingwu/huiniaotable/
 │   ├── DatePickers.kt           # 日期与时间选择器组件
 │   ├── DebugScreen.kt           # 开发者调试入口与通知预览界面
 │   ├── HolidaysScreen.kt        # 节假日方案与调休编排页面
-│   ├── LoginScreen.kt           # 统一教务认证登入界面
+│   ├── WelcomeScreen.kt         # 欢迎页与网页登录入口
+│   ├── WebImportScreen.kt       # 内置 WebView 登录与课表导入
 │   ├── ScheduleScreen.kt        # 核心网格课表、长按拖动与调课视图
 │   ├── SelectionDialog.kt       # 规范化单选/分组选择对话框
 │   ├── SettingsScreen.kt        # 系统全局设置视图

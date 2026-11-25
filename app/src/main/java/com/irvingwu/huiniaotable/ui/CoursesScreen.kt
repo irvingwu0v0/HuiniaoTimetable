@@ -57,8 +57,7 @@ fun CoursesContent(
     if (schedule == null || (schedule.distinctCourses.isEmpty() && schedule.unscheduled.isEmpty())) {
         EmptySchedulePlaceholder(
             hasData = schedule != null,
-            refreshing = state.refreshing,
-            onRefresh = onRefresh,
+            onImport = onRefresh,
         )
         return
     }

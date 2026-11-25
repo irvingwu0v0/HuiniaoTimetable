@@ -102,40 +102,38 @@ fun HuiniaoApp() {
             TimetableRepository.consumeMessage()
         }
 
-        when (state.phase) {
-            Phase.Loading -> LoadingScreen()
-            Phase.LoggedOut -> {
-                var webImport by rememberSaveable { mutableStateOf(false) }
-                var webImportError by remember { mutableStateOf<String?>(null) }
-                if (webImport) {
-                    WebImportScreen(
-                        state = state,
-                        errorMessage = webImportError,
-                        onBack = {
-                            webImport = false
-                            webImportError = null
-                        },
-                        onImported = { html, baseUrl ->
-                            webImportError = null
-                            TimetableRepository.importFromHtml(html, baseUrl) { result ->
-                                if (result.isSuccess) {
-                                    webImport = false
-                                } else {
-                                    webImportError = result.exceptionOrNull()?.message ?: t("导入失败", "Import failed")
-                                }
-                            }
-                        },
-                    )
-                } else {
-                    LoginScreen(
-                        state = state,
-                        onLogin = { studentId, password -> TimetableRepository.login(studentId, password) },
-                        onOpenWebImport = { webImport = true },
-                    )
-                }
-            }
+        var webImport by rememberSaveable { mutableStateOf(false) }
+        var webImportError by remember { mutableStateOf<String?>(null) }
 
-            Phase.Ready -> MainScreen(state = state, snackbarHostState = snackbarHostState)
+        if (webImport) {
+            WebImportScreen(
+                state = state,
+                errorMessage = webImportError,
+                onBack = {
+                    webImport = false
+                    webImportError = null
+                },
+                onImported = { html, baseUrl ->
+                    webImportError = null
+                    TimetableRepository.importFromHtml(html, baseUrl) { result ->
+                        if (result.isSuccess) {
+                            webImport = false
+                        } else {
+                            webImportError = result.exceptionOrNull()?.message ?: t("导入失败", "Import failed")
+                        }
+                    }
+                },
+            )
+        } else {
+            when (state.phase) {
+                Phase.Loading -> LoadingScreen()
+                Phase.LoggedOut -> WelcomeScreen(onOpenWebImport = { webImport = true })
+                Phase.Ready -> MainScreen(
+                    state = state,
+                    snackbarHostState = snackbarHostState,
+                    onOpenWebImport = { webImport = true },
+                )
+            }
         }
     }
 }
@@ -151,7 +149,11 @@ private fun LoadingScreen() {
 }
 
 @Composable
-private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
+private fun MainScreen(
+    state: AppState,
+    snackbarHostState: SnackbarHostState,
+    onOpenWebImport: () -> Unit,
+) {
     var tab by rememberSaveable { mutableStateOf(MainTab.Schedule) }
     var detailCourse by remember { mutableStateOf<Course?>(null) }
     var showCalendarDialog by remember { mutableStateOf(false) }
@@ -371,23 +373,11 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                 },
                 actions = {
                     if (tab != MainTab.Settings) {
-                        if (state.refreshing) {
-                            Box(
-                                modifier = Modifier.size(48.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                )
-                            }
-                        } else {
-                            IconButton(onClick = { TimetableRepository.refresh() }) {
-                                Icon(
-                                    imageVector = AppIcons.Refresh,
-                                    contentDescription = t("同步教务数据", "Sync academic data"),
-                                )
-                            }
+                        IconButton(onClick = onOpenWebImport) {
+                            Icon(
+                                imageVector = AppIcons.Refresh,
+                                contentDescription = t("重新导入课表", "Import timetable again"),
+                            )
                         }
                     }
                 },
@@ -428,7 +418,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                 when (currentTab) {
                     MainTab.Schedule -> ScheduleContent(
                         state = state,
-                        onRefresh = { TimetableRepository.refresh() },
+                        onRefresh = onOpenWebImport,
                         onSelectWeek = { TimetableRepository.selectWeek(it) },
                         onToday = { TimetableRepository.backToCurrentWeek() },
                         onSetTermStart = { TimetableRepository.setTermStart(it) },
@@ -462,15 +452,15 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
 
                     MainTab.Courses -> CoursesContent(
                         state = state,
-                        onRefresh = { TimetableRepository.refresh() },
+                        onRefresh = onOpenWebImport,
                         onCourseClick = { detailCourse = it },
                         onClearPlacements = { TimetableRepository.clearAllCoursePlacements() },
                     )
 
                     MainTab.Settings -> SettingsContent(
                         state = state,
-                        onRefresh = { TimetableRepository.refresh() },
-                        onLogin = { TimetableRepository.requestLogin() },
+                        onRefresh = onOpenWebImport,
+                        onImport = onOpenWebImport,
                         onSyncCalendar = { showCalendarDialog = true },
                         onSelectTerm = { TimetableRepository.selectTerm(it) },
                         onSetTermStart = { TimetableRepository.setTermStart(it) },
@@ -491,7 +481,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                         onDynamicColor = { TimetableRepository.setDynamicColor(it) },
                         onClassNotify = requestClassNotify,
                         onOpenDebug = { currentSubScreen = SubScreen.Debug },
-                        onLogout = { TimetableRepository.logout() },
+                        onClearTimetable = { TimetableRepository.clearImportedSchedule() },
                         onSetJwxtBaseUrl = { TimetableRepository.setJwxtBaseUrl(it) },
                         onOpenClassTimes = { currentSubScreen = SubScreen.ClassTimes },
                         onOpenHolidays = { currentSubScreen = SubScreen.Holidays },

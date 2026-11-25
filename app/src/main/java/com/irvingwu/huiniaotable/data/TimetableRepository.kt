@@ -36,8 +36,6 @@ private val REMOVED_POSITION = -1 to -1
 
 data class AppState(
     val phase: Phase = Phase.Loading,
-    val loggedIn: Boolean = false,
-    val studentId: String = "",
     val jwxtBaseUrl: String = Prefs.DEFAULT_JWXT_BASE_URL,
     val scheduleConfigName: String = tr("标准高校作息表", "Standard University Schedule"),
     val schedule: Schedule? = null,
@@ -46,9 +44,6 @@ data class AppState(
     val currentWeek: Int = 1,
     val selectedWeek: Int = 1,
     val selectedWeekTouched: Boolean = false,
-    val refreshing: Boolean = false,
-    val loggingIn: Boolean = false,
-    val loginError: String? = null,
     val fetchedAt: Long = 0L,
     val lastRefreshDay: String? = null,
     val termStart: LocalDate? = null,
@@ -377,7 +372,6 @@ data class AppState(
 object TimetableRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val refreshMutex = Mutex()
     private val holidayMutex = Mutex()
 
     private val _state = MutableStateFlow(AppState())
@@ -397,15 +391,12 @@ object TimetableRepository {
 
         prefs.scheduleConfigJson?.let { ClassTimes.importJson(it) }
         val saved = Schedule.parse(prefs.scheduleJson)
-        val hasCredentials = prefs.credentials() != null
 
         _state.value = AppState(
             jwxtBaseUrl = prefs.jwxtBaseUrl,
             scheduleConfigName = ClassTimes.configName,
-            // 有缓存课表就先展示（即使登录凭据丢了，也能看已缓存的课表）。
-            phase = if (hasCredentials || saved != null) Phase.Ready else Phase.LoggedOut,
-            loggedIn = hasCredentials,
-            studentId = prefs.studentId,
+            // 有缓存课表就先展示，需要更新时再从网页重新导入。
+            phase = if (saved != null) Phase.Ready else Phase.LoggedOut,
             schedule = saved,
             term = prefs.term.orEmpty(),
             fetchedAt = saved?.fetchedAt ?: prefs.fetchedAt,
@@ -435,49 +426,13 @@ object TimetableRepository {
         launchHandled = true
         scope.launch {
             recomputeWeeks()
-            if (prefs.credentials() != null && prefs.lastRefreshDay != LocalDate.now().toString()) {
-                doRefresh(manual = false)
-            }
             if (needsHolidayRefresh()) {
                 fetchHolidays(silent = true)
             }
         }
     }
 
-    fun login(studentId: String, password: String) {
-        if (_state.value.loggingIn) return
-        _state.update { it.copy(loggingIn = true, loginError = null) }
-        scope.launch {
-            try {
-                when (val result = JwxtClient(baseUrl = _state.value.jwxtBaseUrl).login(studentId, password)) {
-                    is LoginResult.Failure ->
-                        _state.update { it.copy(loggingIn = false, loginError = result.message) }
 
-                    LoginResult.Success -> {
-                        prefs.saveCredentials(studentId, password)
-                        _state.update {
-                            it.copy(
-                                loggingIn = false,
-                                loginError = null,
-                                phase = Phase.Ready,
-                                studentId = studentId,
-                            )
-                        }
-                        doRefresh(manual = false)
-                    }
-                }
-            } catch (t: Throwable) {
-                _state.update { it.copy(loggingIn = false, loginError = friendlyError(t)) }
-            }
-        }
-    }
-
-    /**
-     * 用 WebView 中已登录页面的 HTML 导入课表。
-     *
-     * 登录、验证码、SSO 全部交给 WebView，本地不保存账号密码；
-     * 只持久化解析后的课表和来源地址。
-     */
     fun importFromHtml(html: String, baseUrl: String, onResult: (Result<Unit>) -> Unit = {}) {
         scope.launch {
             try {
@@ -502,8 +457,6 @@ object TimetableRepository {
                         lastRefreshDay = prefs.lastRefreshDay,
                         jwxtBaseUrl = prefs.jwxtBaseUrl,
                         phase = Phase.Ready,
-                        loggedIn = false,
-                        loginError = null,
                     )
                 }
                 recomputeWeeks()
@@ -516,64 +469,9 @@ object TimetableRepository {
         }
     }
 
-    /** 手动刷新课表。 */
-    fun refresh() {
-        scope.launch { doRefresh(manual = true) }
-    }
-
     /** 手动刷新调休数据。 */
     fun refreshHolidays() {
         scope.launch { fetchHolidays(silent = false) }
-    }
-
-    private suspend fun doRefresh(manual: Boolean) {
-        refreshMutex.withLock {
-            val credentials = prefs.credentials()
-            if (credentials == null) {
-                // 只有缓存课表、没有登录凭据：保留课表，提示去登录，不要把人踢回登录页。
-                _state.update { it.copy(refreshing = false) }
-                pushMessage(tr("登录已失效，请重新登录后再刷新", "Session expired. Sign in again before refreshing."))
-                return
-            }
-            _state.update { it.copy(refreshing = true) }
-
-            var finished = false
-            try {
-                val client = JwxtClient(baseUrl = _state.value.jwxtBaseUrl)
-                when (val login = client.login(credentials.first, credentials.second)) {
-                    is LoginResult.Failure -> pushMessage(tr("刷新失败：${login.message}", "Refresh failed: ${login.message}"))
-
-                    LoginResult.Success -> {
-                        val parsed = client.fetchSchedule(prefs.term)
-                        val schedule = parsed.schedule
-                        prefs.scheduleJson = schedule.toJson().toString()
-                        prefs.fetchedAt = schedule.fetchedAt
-                        prefs.lastRefreshDay = LocalDate.now().toString()
-                        prefs.term = schedule.term
-
-                        _state.update { current ->
-                            current.copy(
-                                schedule = schedule,
-                                terms = parsed.terms.ifEmpty { current.terms },
-                                term = schedule.term.ifBlank { current.term },
-                                fetchedAt = schedule.fetchedAt,
-                                lastRefreshDay = prefs.lastRefreshDay,
-                                refreshing = false,
-                                phase = Phase.Ready,
-                                loggedIn = true,
-                            )
-                        }
-                        recomputeWeeks()
-                        if (manual) pushMessage(tr("课表已更新", "Timetable updated"))
-                        finished = true
-                    }
-                }
-            } catch (t: Throwable) {
-                pushMessage(tr("刷新失败：${friendlyError(t)}", "Refresh failed: ${friendlyError(t)}"))
-            } finally {
-                if (!finished) _state.update { it.copy(refreshing = false) }
-            }
-        }
     }
 
     private suspend fun fetchHolidays(silent: Boolean) {
@@ -716,13 +614,14 @@ object TimetableRepository {
         scope.launch { fetchHolidays(silent = false) }
     }
 
-    fun logout() {
-        prefs.clearCredentials()
+    /** 清除已导入的课表，回到网页登录导入页。 */
+    fun clearImportedSchedule() {
+        prefs.clearSchedule()
         _state.update {
             AppState(
                 phase = Phase.LoggedOut,
-                loggedIn = false,
-                studentId = prefs.studentId,
+                jwxtBaseUrl = prefs.jwxtBaseUrl,
+                scheduleConfigName = ClassTimes.configName,
                 termStart = prefs.termStart,
                 campus = prefs.campus,
                 building = prefs.building,
@@ -740,11 +639,6 @@ object TimetableRepository {
             )
         }
         reloadHolidays()
-    }
-
-    /** 设置页里点「去登录」时用：回到登录页，但保留已缓存的课表数据。 */
-    fun requestLogin() {
-        _state.update { it.copy(phase = Phase.LoggedOut, loginError = null) }
     }
 
     fun selectWeek(week: Int) {
@@ -882,7 +776,7 @@ object TimetableRepository {
         if (term.isBlank() || term == _state.value.term) return
         prefs.term = term
         _state.update { it.copy(term = term) }
-        refresh()
+        pushMessage(tr("已切换学期，请在网页里切换到对应学期后重新导入课表", "Term changed. Re-import the timetable from the corresponding term page."))
     }
 
     fun setDynamicColor(enabled: Boolean) {
@@ -1019,7 +913,6 @@ object TimetableRepository {
         JSONObject().apply { map.forEach { (key, value) -> put(key, value.name) } }.toString()
 
     private fun friendlyError(t: Throwable): String = when (t) {
-        is SessionExpiredException -> tr("登录状态已失效，请重新登录", "Session expired. Please sign in again.")
         is ParseException -> t.message ?: tr("解析失败", "Parsing failed")
         is UnknownHostException -> tr("网络不可用，请检查网络连接", "Network unavailable. Check your connection.")
         is SocketTimeoutException -> tr("连接超时，请稍后重试", "Connection timed out. Try again later.")

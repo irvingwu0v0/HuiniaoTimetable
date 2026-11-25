@@ -75,7 +75,6 @@ class ScreensSmokeTest {
         makeupOverrides: Map<LocalDate, Int> = emptyMap(),
     ) = AppState(
         phase = Phase.Ready,
-        studentId = "2026000000",
         schedule = schedule,
         term = "2026-2027-1",
         currentWeek = currentWeek,
@@ -216,7 +215,7 @@ class ScreensSmokeTest {
                     SettingsContent(
                         state = stateWith(),
                         onRefresh = {},
-                        onLogin = {},
+                        onImport = {},
                         onSyncCalendar = {},
                         onSelectTerm = {},
                         onSetTermStart = {},
@@ -233,12 +232,12 @@ class ScreensSmokeTest {
                         onDynamicColor = {},
                         onClassNotify = {},
                         onOpenDebug = {},
-                        onLogout = {},
+                        onClearTimetable = {},
                     )
                 }
             }
         }
-        compose.onNodeWithText("统一认证学号").assertIsDisplayed()
+        compose.onNodeWithText("教务系统网址").assertIsDisplayed()
         compose.onNodeWithTag("settings_list").performScrollToNode(hasText("学期开学首周基准日"))
         compose.onNodeWithText("学期开学首周基准日").assertIsDisplayed()
         compose.onNodeWithTag("settings_list").performScrollToNode(hasText("作息方案与校区楼宇设置"))

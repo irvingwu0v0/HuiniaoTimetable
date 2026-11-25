@@ -87,7 +87,7 @@ private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy
 fun SettingsContent(
     state: AppState,
     onRefresh: () -> Unit,
-    onLogin: () -> Unit,
+    onImport: () -> Unit,
     onSyncCalendar: () -> Unit,
     onSelectTerm: (String) -> Unit,
     onSetTermStart: (LocalDate) -> Unit,
@@ -104,7 +104,7 @@ fun SettingsContent(
     onDynamicColor: (Boolean) -> Unit,
     onClassNotify: (Boolean) -> Unit,
     onOpenDebug: () -> Unit,
-    onLogout: () -> Unit,
+    onClearTimetable: () -> Unit,
     onSetJwxtBaseUrl: (String) -> Unit = {},
     onOpenClassTimes: () -> Unit = {},
     onOpenHolidays: () -> Unit = {},
@@ -202,37 +202,23 @@ fun SettingsContent(
         item {
             SettingsCard {
                 SettingRow(
-                    icon = AppIcons.AccountCircle,
-                    title = t("统一认证学号", "Student ID"),
-                    subtitle = state.studentId.ifBlank { t("未建立有效教务会话", "No active academic session") },
-                )
-                HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
-                SettingRow(
                     icon = AppIcons.Language,
                     title = t("教务系统网址", "Academic system URL"),
                     subtitle = state.jwxtBaseUrl.ifBlank { t("未配置教务系统网址", "Academic system URL not configured") },
                     onClick = { showJwxtDialog = true },
                 )
                 HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
-                if (!state.loggedIn) {
-                    SettingRow(
-                        icon = AppIcons.LockReset,
-                        title = t("凭据鉴权已失效", "Sign-in expired"),
-                        subtitle = t("当前展示离线课表，请重新登录鉴权", "Showing the offline timetable. Sign in again."),
-                        onClick = onLogin,
-                    )
-                    FilledTonalButton(
-                        onClick = onLogin,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                    ) {
-                        Text(t("重新登入教务系统", "Sign in again"))
-                    }
+                FilledTonalButton(
+                    onClick = onImport,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                ) {
+                    Text(t("打开网页登录并重新导入课表", "Open web page to import again"))
                 }
                 MiuixTextButton(
-                    text = t("退出当前账户并清除本地凭据", "Sign out and clear local credentials"),
-                    onClick = onLogout,
+                    text = t("清除已导入的课表", "Clear imported timetable"),
+                    onClick = onClearTimetable,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -271,16 +257,9 @@ fun SettingsContent(
                 )
                 Button(
                     onClick = onRefresh,
-                    enabled = !state.refreshing,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        if (state.refreshing) {
-                            t("正在同步教务系统…", "Syncing academic system…")
-                        } else {
-                            t("立即执行远程数据同步", "Sync now")
-                        },
-                    )
+                    Text(t("打开网页登录并重新导入课表", "Open web page to import again"))
                 }
             }
         }
