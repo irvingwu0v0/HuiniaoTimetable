@@ -58,13 +58,10 @@ private enum class SubScreen {
     None, Debug, ClassTimes, Holidays
 }
 
-private enum class MainTab(
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-) {
-    Schedule(AppIcons.DateRange, AppIcons.DateRange),
-    Courses(AppIcons.List, AppIcons.List),
-    Settings(AppIcons.Settings, AppIcons.Settings),
+private enum class MainTab(val icon: ImageVector) {
+    Schedule(AppIcons.DateRange),
+    Courses(AppIcons.List),
+    Settings(AppIcons.Settings),
     ;
 
     val label: String
@@ -391,7 +388,7 @@ private fun MainScreen(state: AppState, snackbarHostState: SnackbarHostState) {
                     NavigationBarItem(
                         selected = tab == entry,
                         onClick = { tab = entry },
-                        icon = if (tab == entry) entry.selectedIcon else entry.unselectedIcon,
+                        icon = entry.icon,
                         label = entry.label,
                     )
                 }
