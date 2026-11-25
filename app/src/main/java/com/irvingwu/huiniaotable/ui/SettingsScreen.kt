@@ -198,7 +198,7 @@ fun SettingsContent(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // ---- 账户与凭据认证 ----
+        // ---- 教务系统与课表来源 ----
         item {
             SettingsCard {
                 SettingRow(
@@ -351,7 +351,7 @@ fun SettingsContent(
             }
         }
 
-        // ---- 系统关于与凭据合规 ----
+        // ---- 系统关于与隐私说明 ----
         item {
             SettingsCard {
                 Row(
@@ -422,8 +422,8 @@ fun SettingsContent(
 
                 SettingRow(
                     icon = AppIcons.Shield,
-                    title = t("本地离线沙盒安全保障", "Local secure storage"),
-                    subtitle = t("凭据由硬件 KeyStore 加密存储，无云端中转", "Credentials are encrypted with hardware-backed KeyStore"),
+                    title = t("零凭据存储", "No credentials stored"),
+                    subtitle = t("登录在网页内完成，App 只保存课表与教务系统网址", "Sign-in happens in the web page; only the timetable and site URL are kept"),
                 )
             }
         }
