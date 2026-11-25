@@ -93,33 +93,42 @@ object KbParser {
             ?: throw ParseException(t("课表表格是空的", "The timetable table is empty"))
         val colToDay = buildDayColumns(headerRow)
 
-        val slotRows = mutableListOf<SlotRow>()
-        val courses = mutableListOf<Course>()
+        data class RowInfo(val tr: Element, val row: SlotRow)
+
+        val rows = mutableListOf<RowInfo>()
         for (tr in trs) {
             val cells = tr.children().filter { it.tagName() == "th" || it.tagName() == "td" }
             if (cells.isEmpty()) continue
-            val head = cells.first()
-            if (head.tagName() != "th" && head.parent() !== tr) continue
-            val slots = parseRowSlots(head.text()) ?: continue
-            val rowIndex = slotRows.size
-            slotRows += SlotRow(
-                head.text().trim().ifBlank {
-                    t("第${slots.first}-${slots.second}节", "Periods ${slots.first}–${slots.second}")
-                },
-                slots.first,
-                slots.second,
+            val slots = parseRowSlots(cells.first().text()) ?: continue
+            rows += RowInfo(
+                tr,
+                SlotRow(
+                    cells.first().text().trim().ifBlank {
+                        t("第${slots.first}-${slots.second}节", "Periods ${slots.first}–${slots.second}")
+                    },
+                    slots.first,
+                    slots.second,
+                ),
             )
+        }
 
+        val courses = mutableListOf<Course>()
+        rows.forEachIndexed { rowIndex, info ->
+            val cells = info.tr.children().filter { it.tagName() == "th" || it.tagName() == "td" }
+            val head = cells.firstOrNull() ?: return@forEachIndexed
             var column = 0
             for (cell in cells) {
-                val span = cell.attr("colspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
+                val colspan = cell.attr("colspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
                 if (cell !== head) {
                     val day = colToDay.getOrElse(column) { 0 }
                     if (day in 1..7) {
-                        courses += coursesInCell(cell, day, rowIndex, slots.first, slots.second, family)
+                        // 部分教务系统用 rowspan 表示跨大节的连堂课，这里把节次范围一并扩到末行。
+                        val rowspan = cell.attr("rowspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
+                        val endSlot = rows.getOrNull(rowIndex + rowspan - 1)?.row?.endSlot ?: info.row.endSlot
+                        courses += coursesInCell(cell, day, rowIndex, info.row.startSlot, endSlot, family)
                     }
                 }
-                column += span
+                column += colspan
             }
         }
 
@@ -140,7 +149,7 @@ object KbParser {
             termLabel = selectedTerm?.label ?: fallbackTerm,
             courses = merged,
             unscheduled = unscheduled,
-            slotRows = slotRows.ifEmpty { SlotRow.DEFAULT },
+            slotRows = rows.map { it.row }.ifEmpty { SlotRow.DEFAULT },
             maxWeek = maxWeek,
             lastTeachingWeek = lastTeachingWeek,
             fetchedAt = System.currentTimeMillis(),
