@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -124,7 +125,42 @@ fun LoginScreen(
                 color = AppTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
+
+            // 首选方式：在 WebView 里完成学校自己的网页登录，不额外保存密码
+            Button(
+                onClick = onOpenWebImport,
+                shape = AppTheme.shapes.medium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+            ) {
+                Icon(
+                    imageVector = AppIcons.Public,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(t("打开教务系统网页登录", "Open academic system web page"), style = AppTheme.typography.labelLarge)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = t(
+                    "在网页里完成验证码 / 统一身份认证，自动识别强智、正方、青果教务并跳转课表。",
+                    "Complete captcha or SSO in the page; Qiangzhi, Zhengfang and Kingosoft are detected automatically.",
+                ),
+                style = AppTheme.typography.bodySmall,
+                color = AppTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = t("或使用学号密码登录", "Or sign in with student ID"),
+                style = AppTheme.typography.labelMedium,
+                color = AppTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
 
             // 鉴权表单容器
             Card(
@@ -280,14 +316,6 @@ fun LoginScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-
-            top.yukonga.miuix.kmp.basic.TextButton(
-                text = t("用网页登录导入课表", "Sign in on the web page instead"),
-                onClick = onOpenWebImport,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            androidx.compose.foundation.layout.Spacer(Modifier.height(8.dp))
 
             // 隐私安全与数据合规说明卡片
             Card(

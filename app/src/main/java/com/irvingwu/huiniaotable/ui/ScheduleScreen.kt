@@ -27,6 +27,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -1184,30 +1185,36 @@ private fun CourseTile(
         contentColor = tileContent,
         shadowElevation = 0.dp,
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
-        ) {
-            Text(
-                text = course.name,
-                style = AppTheme.typography.labelSmall.copy(lineHeight = 12.sp),
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
-            course.room?.let { room ->
-                TileInfoRow(
-                    icon = AppIcons.LocationOn,
-                    text = room,
-                    tint = accent,
+        BoxWithConstraints {
+            // 单节课只有半格高度，空间不够时只显示课程名。
+            val compact = maxHeight < 56.dp
+            Column(
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
+            ) {
+                Text(
+                    text = course.name,
+                    style = AppTheme.typography.labelSmall.copy(lineHeight = 12.sp),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = if (compact) 2 else 3,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            }
-            course.teacher?.let { teacher ->
-                TileInfoRow(
-                    icon = AppIcons.Person,
-                    text = teacher,
-                    tint = accent,
-                )
+                if (!compact) {
+                    course.room?.let { room ->
+                        TileInfoRow(
+                            icon = AppIcons.LocationOn,
+                            text = room,
+                            tint = accent,
+                        )
+                    }
+                    course.teacher?.let { teacher ->
+                        TileInfoRow(
+                            icon = AppIcons.Person,
+                            text = teacher,
+                            tint = accent,
+                        )
+                    }
+                }
             }
         }
     }

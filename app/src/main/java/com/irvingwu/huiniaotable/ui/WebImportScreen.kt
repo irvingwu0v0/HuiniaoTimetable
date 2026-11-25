@@ -3,9 +3,14 @@ package com.irvingwu.huiniaotable.ui
 import com.irvingwu.huiniaotable.ui.icons.AppIcons
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import android.graphics.Bitmap
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +36,7 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -49,6 +55,7 @@ import com.irvingwu.huiniaotable.t
 fun WebImportScreen(
     state: AppState,
     onBack: () -> Unit,
+    errorMessage: String? = null,
     onImported: (html: String, baseUrl: String) -> Unit,
 ) {
     var url by rememberSaveable { mutableStateOf(state.jwxtBaseUrl) }
@@ -58,11 +65,21 @@ fun WebImportScreen(
     var detected by remember { mutableStateOf<SchoolFamily?>(null) }
     var autoJumped by remember { mutableStateOf(false) }
 
+    BackHandler {
+        val view = webView
+        if (view?.canGoBack() == true) view.goBack() else onBack()
+    }
+
     fun load(target: String) {
         val normalized = target.trim().let { if (it.startsWith("http")) it else "https://$it" }
         if (normalized.isBlank() || normalized == "https://") return
         url = normalized
-        loadedUrl = normalized
+        val view = webView
+        if (view == null) {
+            loadedUrl = normalized
+        } else {
+            view.loadUrl(normalized)
+        }
     }
 
     Scaffold(
@@ -104,6 +121,8 @@ fun WebImportScreen(
                     singleLine = true,
                     label = { Text(t("教务系统网址", "Academic system URL")) },
                     placeholder = { Text("https://jwxt.example.edu.cn/jsxsd/") },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = { load(url) }),
                 )
                 Button(onClick = { load(url) }) {
                     Text(t("打开", "Open"))
@@ -127,6 +146,23 @@ fun WebImportScreen(
 
             if (loading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            errorMessage?.let { err ->
+                Surface(
+                    color = MiuixTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = err,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
             }
 
             Box(
@@ -171,9 +207,13 @@ fun WebImportScreen(
                                             detected = family?.takeIf { it != SchoolFamily.Generic }
                                             // 登录成功、但当前还不在课表页时，自动跳到课表入口。
                                             if (!autoJumped && family != null) {
-                                                autoJumped = true
                                                 view.postDelayed({
-                                                    view.evaluateJavascript(AUTO_JUMP_JS, null)
+                                                    view.evaluateJavascript(AUTO_JUMP_JS) { result ->
+                                                        val status = decodeJavascriptString(result)
+                                                        if (status == "jsxsd" || status == "jwglxt") {
+                                                            autoJumped = true
+                                                        }
+                                                    }
                                                 }, 1200)
                                             }
                                         }
@@ -183,9 +223,7 @@ fun WebImportScreen(
                                 loadUrl(target)
                             }
                         },
-                        update = {
-                            if (it.url != target) it.loadUrl(target)
-                        },
+
                     )
                 }
             }
@@ -257,6 +295,7 @@ private fun familyLabel(family: SchoolFamily): String = when (family) {
 private const val AUTO_JUMP_JS = """
 (function () {
   if (document.querySelector('table#timetable, table#kbtable, table#Table1, table#table1, div.kbcontent, div.kbcontent1')) return 'already';
+  if (document.querySelector('input[type=password], form#loginForm, #SafeCodeImg')) return 'login';
   var href = location.href || '';
   if (/\/jsxsd\//i.test(href)) {
     location.href = href.replace(/\/jsxsd\/.*$/, '/jsxsd/xskb/xskb_list.do');
@@ -277,6 +316,7 @@ private const val AUTO_JUMP_JS = """
  */
 private const val AUTO_OPEN_TIMETABLE_JS = """
 (function () {
+  if (document.querySelector('input[type=password], form#loginForm, #SafeCodeImg')) return 'login';
   var pattern = /课表|课程表|我的课表|学生课表|班级课表|学期课表/;
   var nodes = Array.from(document.querySelectorAll('a,button,li,span,div'));
   for (var i = 0; i < nodes.length; i++) {

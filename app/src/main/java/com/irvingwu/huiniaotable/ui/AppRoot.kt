@@ -106,13 +106,24 @@ fun HuiniaoApp() {
             Phase.Loading -> LoadingScreen()
             Phase.LoggedOut -> {
                 var webImport by rememberSaveable { mutableStateOf(false) }
+                var webImportError by remember { mutableStateOf<String?>(null) }
                 if (webImport) {
                     WebImportScreen(
                         state = state,
-                        onBack = { webImport = false },
-                        onImported = { html, baseUrl ->
-                            TimetableRepository.importFromHtml(html, baseUrl)
+                        errorMessage = webImportError,
+                        onBack = {
                             webImport = false
+                            webImportError = null
+                        },
+                        onImported = { html, baseUrl ->
+                            webImportError = null
+                            TimetableRepository.importFromHtml(html, baseUrl) { result ->
+                                if (result.isSuccess) {
+                                    webImport = false
+                                } else {
+                                    webImportError = result.exceptionOrNull()?.message ?: t("导入失败", "Import failed")
+                                }
+                            }
                         },
                     )
                 } else {

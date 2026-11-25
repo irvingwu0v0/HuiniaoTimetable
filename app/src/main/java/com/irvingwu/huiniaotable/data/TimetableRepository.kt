@@ -478,7 +478,7 @@ object TimetableRepository {
      * 登录、验证码、SSO 全部交给 WebView，本地不保存账号密码；
      * 只持久化解析后的课表和来源地址。
      */
-    fun importFromHtml(html: String, baseUrl: String) {
+    fun importFromHtml(html: String, baseUrl: String, onResult: (Result<Unit>) -> Unit = {}) {
         scope.launch {
             try {
                 require(html.isNotBlank()) { tr("没有读取到页面内容", "No page content was captured") }
@@ -508,8 +508,10 @@ object TimetableRepository {
                 }
                 recomputeWeeks()
                 pushMessage(tr("课表已导入", "Timetable imported"))
+                onResult(Result.success(Unit))
             } catch (t: Throwable) {
                 pushMessage(tr("导入失败：${t.message ?: "无法解析页面"}", "Import failed: ${t.message ?: "could not parse page"}"))
+                onResult(Result.failure(t))
             }
         }
     }
