@@ -3,6 +3,8 @@ package com.irvingwu.huiniaotable
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Course
 import com.irvingwu.huiniaotable.data.Schedule
+import java.time.LocalDate
+import com.irvingwu.huiniaotable.data.byPeriod
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -34,6 +36,21 @@ class CoursePlacementTest {
 
     private fun packMove(targetWeek: Int, day: Int, row: Int) =
         targetWeek * 10000 + day * 100 + row
+
+    @Test
+    fun `日期视图按调后的星期和节次取课 不受浏览周次影响`() {
+        val monday = LocalDate.of(2026, 9, 7)
+        val state = stateOf("1#${course().key}" to packMove(2, 5, 4)).let {
+            it.copy(schedule = it.schedule!!.byPeriod(), termStart = monday, selectedWeek = 7)
+        }
+        assertTrue(state.classesOnDate(monday.minusWeeks(1).plusDays(1)).isEmpty())
+        assertTrue(state.classesOnDate(monday.plusDays(1)).isEmpty())
+        assertEquals(3, state.classesOnDate(monday.plusWeeks(1).plusDays(1)).single().startSlot)
+        val moved = state.classesOnDate(monday.plusWeeks(1).plusDays(4)).single()
+        assertEquals(5, moved.dayOfWeek)
+        assertEquals(5, moved.startSlot)
+        assertEquals(6, moved.endSlot)
+    }
 
     @Test
     fun `默认位置即教务排课位置`() {

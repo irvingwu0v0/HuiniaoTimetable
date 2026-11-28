@@ -4,6 +4,8 @@ import com.irvingwu.huiniaotable.ui.icons.AppIcons
 
 import android.app.TimePickerDialog
 import android.widget.Toast
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -25,8 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.irvingwu.huiniaotable.ui.compat.AlertDialog
 import com.irvingwu.huiniaotable.ui.compat.Button
 import com.irvingwu.huiniaotable.ui.compat.ButtonDefaults
-import com.irvingwu.huiniaotable.ui.compat.Card
-import com.irvingwu.huiniaotable.ui.compat.CardDefaults
 import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
 import com.irvingwu.huiniaotable.ui.compat.FilterChip
 import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
@@ -35,7 +35,6 @@ import com.irvingwu.huiniaotable.ui.compat.IconButton
 import com.irvingwu.huiniaotable.ui.compat.AppTheme
 import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
 import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
-import com.irvingwu.huiniaotable.ui.compat.Scaffold
 import com.irvingwu.huiniaotable.ui.compat.SegmentedButton
 import com.irvingwu.huiniaotable.ui.compat.SegmentedButtonDefaults
 import com.irvingwu.huiniaotable.ui.compat.SingleChoiceSegmentedButtonRow
@@ -50,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -304,9 +302,11 @@ fun ClassTimesScreen(
         )
     }
 
+    val scrollBehavior = MiuixScrollBehavior()
     MiuixScaffold(
         topBar = {
             MiuixTopAppBar(
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     MiuixIconButton(onClick = onBack) {
                         MiuixIcon(
@@ -315,7 +315,7 @@ fun ClassTimesScreen(
                         )
                     }
                 },
-                title = t("作息时间与校区楼宇", "Schedules, campuses and buildings"),
+                title = t("作息时间", "Period times"),
                 actions = {
                     IconButton(onClick = { isCreatingScheme = true }) {
                         Icon(imageVector = AppIcons.Add, contentDescription = t("新建方案", "New schedule"))
@@ -327,103 +327,21 @@ fun ClassTimesScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // ---- 方案概览与管理 ----
-            item {
-                ClassTimesCard {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Icon(
-                            imageVector = AppIcons.Schedule,
-                            contentDescription = null,
-                            tint = AppTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = state.scheduleConfigName,
-                                style = AppTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = t(
-                                    "包含 ${schemes.size} 套楼宇方案 · 基准校区：${state.campus.label}",
-                                    "${schemes.size} building schedules · Base campus: ${state.campus.label}",
-                                ),
-                                style = AppTheme.typography.bodySmall,
-                                color = AppTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.height(4.dp))
-                    HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        OutlinedButton(
-                            onClick = { showImportDialog = true },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(imageVector = AppIcons.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(t("导入 JSON", "Import JSON"))
-                        }
-                        OutlinedButton(
-                            onClick = { showExportDialog = true },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(imageVector = AppIcons.FileDownload, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(t("导出 JSON", "Export JSON"))
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        FilledTonalButton(
-                            onClick = { isCreatingScheme = true },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(imageVector = AppIcons.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(t("新建作息方案", "New schedule"))
-                        }
-                        FilledTonalButton(
-                            onClick = {
-                                onResetConfig()
-                                Toast.makeText(context, t("已恢复标准作息", "Standard schedule restored"), Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(imageVector = AppIcons.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(t("恢复标准作息", "Restore standard schedule"))
-                        }
-                    }
-                }
-            }
-
             // ---- 图形化节次起止时间与编辑入口 ----
             item {
-                ClassTimesCard {
+                PreferenceGroup {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = t("图形化节次起止时间", "Period start and end times"),
+                            text = t("节次时间", "Periods"),
                             style = AppTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -456,48 +374,13 @@ fun ClassTimesScreen(
                     periods.forEachIndexed { idx, clockTime ->
                         val slot = idx + 1
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(AppTheme.shapes.small)
-                                .clickable { editingScheme = activeScheme }
-                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = AppTheme.colorScheme.secondaryContainer,
-                                modifier = Modifier.size(36.dp),
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = "$slot",
-                                        style = AppTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AppTheme.colorScheme.onSecondaryContainer,
-                                    )
-                                }
-                            }
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = t("第 $slot 节", "Period $slot"),
-                                    style = AppTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                )
-                                Text(
-                                    text = "${clockTime.start} — ${clockTime.end}",
-                                    style = AppTheme.typography.bodySmall,
-                                    color = AppTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-
-                            Icon(
-                                imageVector = AppIcons.Edit,
-                                contentDescription = t("修改时间", "Change time"),
-                                tint = AppTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
+                            Text(t("第 $slot 节", "Period $slot"), style = AppTheme.typography.bodyLarge)
+                            Text("${clockTime.start} – ${clockTime.end}", style = AppTheme.typography.bodyMedium,
+                                color = AppTheme.colorScheme.onSurfaceVariant)
                         }
 
                         if (slot == state.effectiveLunchBreakSlot && idx < periods.size - 1) {
@@ -540,8 +423,8 @@ fun ClassTimesScreen(
 
             // ---- 基准校区与默认作息方案 ----
             item {
-                ClassTimesCard {
-                    ClassTimesSettingRow(
+                PreferenceGroup {
+                    PreferenceLine(
                         icon = AppIcons.Apartment,
                         title = t("默认基准校区", "Default campus"),
                         subtitle = t(
@@ -569,7 +452,7 @@ fun ClassTimesScreen(
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
-                    ClassTimesSettingRow(
+                    PreferenceLine(
                         icon = AppIcons.Schedule,
                         title = t("未指定楼宇默认作息", "Default schedule for unmatched buildings"),
                         subtitle = "${state.timeTable.label} (${state.timeTable.campus})",
@@ -587,7 +470,7 @@ fun ClassTimesScreen(
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider(color = AppTheme.colorScheme.outlineVariant)
 
-                    ClassTimesSettingRow(
+                    PreferenceLine(
                         icon = AppIcons.WbSunny,
                         title = t("中午午休开始时段", "Lunch break start"),
                         subtitle = t("第 ${state.effectiveLunchBreakSlot} 节后", "After period ${state.effectiveLunchBreakSlot}"),
@@ -607,7 +490,7 @@ fun ClassTimesScreen(
             // ---- 课表教学楼方案映射（不分校区显示所有楼宇） ----
             if (state.buildingKeys.isNotEmpty()) {
                 item {
-                    ClassTimesCard {
+                    PreferenceGroup {
                         Text(
                             text = t("楼宇作息映射", "Building schedule mapping"),
                             style = AppTheme.typography.titleMedium,
@@ -622,7 +505,7 @@ fun ClassTimesScreen(
                                     color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 )
                             }
-                            ClassTimesSettingRow(
+                            PreferenceLine(
                                 icon = AppIcons.Domain,
                                 title = key,
                                 onClick = { activeBuildingKey = key },
@@ -654,6 +537,17 @@ fun ClassTimesScreen(
                             )
                         }
                     }
+                }
+            }
+            item {
+                top.yukonga.miuix.kmp.basic.SmallTitle(text = t("方案管理", "Manage schedules"))
+                PreferenceGroup {
+                    PreferenceLine(title = t("导入 JSON", "Import JSON"), onClick = { showImportDialog = true })
+                    PreferenceLine(title = t("导出 JSON", "Export JSON"), onClick = { showExportDialog = true })
+                    PreferenceLine(title = t("恢复标准作息", "Restore standard schedule"), onClick = {
+                        onResetConfig()
+                        Toast.makeText(context, t("已恢复标准作息", "Standard schedule restored"), Toast.LENGTH_SHORT).show()
+                    })
                 }
             }
         }
@@ -737,9 +631,11 @@ fun SchemeEditScreen(
         }
     }
 
+    val scrollBehavior = MiuixScrollBehavior()
     MiuixScaffold(
         topBar = {
             MiuixTopAppBar(
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     MiuixIconButton(onClick = onBack) {
                         MiuixIcon(
@@ -760,13 +656,14 @@ fun SchemeEditScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // 方案与校区卡片
             item {
-                ClassTimesCard {
+                PreferenceGroup {
                     Text(
                         text = t("方案与校区基础设置", "Schedule and campus"),
                         style = AppTheme.typography.titleMedium,
@@ -811,7 +708,7 @@ fun SchemeEditScreen(
 
             // 节次起止时间
             item {
-                ClassTimesCard {
+                PreferenceGroup {
                     Text(
                         text = t("各节次起止时间", "Period start and end times"),
                         style = AppTheme.typography.titleMedium,
@@ -1005,75 +902,4 @@ private fun ImportJsonDialog(
             }
         },
     )
-}
-
-@Composable
-private fun ClassTimesCard(content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colorScheme.surfaceContainerLow,
-        ),
-        shape = AppTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ClassTimesSettingRow(
-    icon: ImageVector? = null,
-    title: String,
-    subtitle: String? = null,
-    onClick: (() -> Unit)? = null,
-    trailing: (@Composable () -> Unit)? = null,
-) {
-    val rowModifier = Modifier
-        .fillMaxWidth()
-        .clip(AppTheme.shapes.small)
-        .then(
-            if (onClick != null) {
-                Modifier.clickable(onClick = onClick)
-            } else {
-                Modifier
-            },
-        )
-        .padding(vertical = 8.dp, horizontal = 2.dp)
-
-    Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = AppTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = AppTheme.typography.titleMedium.copy(
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            )
-            if (!subtitle.isNullOrBlank()) {
-                Text(
-                    text = subtitle,
-                    style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        trailing?.invoke()
-    }
 }

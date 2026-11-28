@@ -135,12 +135,7 @@ private fun buildWidgetViews(
     views.removeAllViews(R.id.widget_course_list)
 
     val schedule = state.schedule
-    val courses = if (schedule != null && !state.needsTermStart && !offDay) {
-        val day = state.displayDayOfWeek(today, state.currentWeek)
-        schedule.coursesOnDay(day, state.currentWeek)
-    } else {
-        emptyList()
-    }
+    val courses = state.classesOnDate(today)
 
     val rows = if (courses.isEmpty()) {
         emptyList()
@@ -312,14 +307,10 @@ private fun scheduleNextRefresh(context: Context) {
     val today = now.toLocalDate()
 
     val boundaries = mutableListOf<LocalDateTime>()
-    val schedule = state.schedule
-    if (schedule != null && !state.needsTermStart && !state.isOffDay(today)) {
-        val day = state.displayDayOfWeek(today, state.currentWeek)
-        schedule.coursesOnDay(day, state.currentWeek).forEach { course ->
-            parseRange(state.timeTextFor(course))?.let { range ->
-                boundaries += LocalDateTime.of(today, range.start)
-                boundaries += LocalDateTime.of(today, range.end)
-            }
+    state.classesOnDate(today).forEach { course ->
+        parseRange(state.timeTextFor(course))?.let { range ->
+            boundaries += LocalDateTime.of(today, range.start)
+            boundaries += LocalDateTime.of(today, range.end)
         }
     }
 

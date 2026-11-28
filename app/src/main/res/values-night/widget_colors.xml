@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 桌面控件的系统动态配色（深色），随系统深色模式自动切换。 -->
+<!-- 桌面控件配色（深色）。API 34+ 的系统动态取色见 values-night-v34。 -->
 <resources>
-    <color name="widget_background">@android:color/system_surface_container_high_dark</color>
-    <color name="widget_foreground">@android:color/system_on_surface_dark</color>
-    <color name="widget_muted">@android:color/system_on_surface_variant_dark</color>
-    <color name="widget_accent">@android:color/system_primary_dark</color>
-    <color name="widget_divider">@android:color/system_outline_variant_dark</color>
+    <color name="widget_background">#FF24262B</color>
+    <color name="widget_foreground">#FFE4E5E9</color>
+    <color name="widget_muted">#FFADB0B7</color>
+    <color name="widget_accent">#FF9ACDF5</color>
+    <color name="widget_divider">#FF3D4046</color>
 </resources>

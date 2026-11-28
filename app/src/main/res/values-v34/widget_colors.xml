@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 桌面控件使用系统动态取色（浅色）。 -->
+<resources>
+    <color name="widget_background">@android:color/system_surface_container_high_light</color>
+    <color name="widget_foreground">@android:color/system_on_surface_light</color>
+    <color name="widget_muted">@android:color/system_on_surface_variant_light</color>
+    <color name="widget_accent">@android:color/system_primary_light</color>
+    <color name="widget_divider">@android:color/system_outline_variant_light</color>
+</resources>

@@ -68,10 +68,6 @@ object CalendarSyncManager {
             val resolver = context.contentResolver
             val calendarId = getOrCreateCalendarId(context)
 
-            // 1. 先清理此前由本应用写入的全部历史课程日程，避免重复堆叠
-            clearAllSyncedEvents(context)
-
-            // 2. 统计并收集全部学期课程事件
             val zoneId = ZoneId.systemDefault()
             val timeZoneId = TimeZone.getDefault().id
             val maxCourseWeek = schedule.courses.flatMap { it.weeks }.maxOrNull() ?: state.lastTeachingWeek
@@ -83,23 +79,14 @@ object CalendarSyncManager {
                 for (dayIndex in 1..7) {
                     val date = dateOf(dayIndex, week, termStart)
 
-                    // 法定节假日或自定义放假日停课，不写入日程
-                    if (state.isOffDay(date)) continue
-
-                    // 调休上班日可能按另一星期的课表补课
-                    val effectiveDay = state.displayDayOfWeek(date, week)
-                    val courses = schedule.coursesAtDayOnly(effectiveDay, week)
-
-                    for (course in courses) {
+                    for (course in state.classesOnDate(date)) {
                         val scheme = state.schemeFor(course)
                         val periods = ClassTimes.periods(scheme)
-                        val startSlotIdx = (course.startSlot - 1).coerceIn(0, periods.size - 1)
-                        val endSlotIdx = (course.endSlot - 1).coerceIn(0, periods.size - 1)
-
-                        val startTime = runCatching { LocalTime.parse(periods[startSlotIdx].start) }
-                            .getOrNull() ?: LocalTime.of(10, 0)
-                        val endTime = runCatching { LocalTime.parse(periods[endSlotIdx].end) }
-                            .getOrNull() ?: LocalTime.of(11, 40)
+                        val startTime = periods.getOrNull(course.startSlot - 1)?.start?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
+                        val endTime = periods.getOrNull(course.endSlot - 1)?.end?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
+                        require(startTime != null && endTime != null && endTime.isAfter(startTime)) {
+                            t("请先补全《${course.name}》${course.slotText}的作息时间。", "Set valid period times for ${course.name} (${course.slotText}) before syncing.")
+                        }
 
                         val startMillis = date.atTime(startTime).atZone(zoneId).toInstant().toEpochMilli()
                         val endMillis = date.atTime(endTime).atZone(zoneId).toInstant().toEpochMilli()
@@ -110,8 +97,8 @@ object CalendarSyncManager {
                             course.classLabel?.let { append(t("教学班级: $it", "Class: $it") + "\n") }
                             append(
                                 t(
-                                    "时段安排: ${course.slotText} (${periods[startSlotIdx].start}–${periods[endSlotIdx].end})",
-                                    "Time: ${course.slotText} (${periods[startSlotIdx].start}–${periods[endSlotIdx].end})",
+                                    "时段安排: ${course.slotText} ($startTime–$endTime)",
+                                    "Time: ${course.slotText} ($startTime–$endTime)",
                                 ) + "\n",
                             )
                             append(
@@ -141,7 +128,9 @@ object CalendarSyncManager {
                 }
             }
 
-            // 3. 分批构建并提交操作：每批 40 节（含提醒共 80 个操作），
+            clearAllSyncedEvents(context).getOrThrow()
+
+            // 分批构建并提交操作：每批 40 节（含提醒共 80 个操作），
             // 提醒的外键回溯引用严格限定在当前 batch 内的相对下标（0, 2, 4...），杜绝越界
             var totalInserted = 0
             occurrences.chunked(40).forEach { batch ->
@@ -201,9 +190,6 @@ object CalendarSyncManager {
         val monday = termStart.minusDays((termStart.dayOfWeek.value - 1).toLong())
         return monday.plusWeeks((week - 1).toLong()).plusDays((dayIndex - 1).toLong())
     }
-
-    private fun Schedule.coursesAtDayOnly(dayOfWeek: Int, week: Int): List<Course> =
-        courses.filter { it.dayOfWeek == dayOfWeek && it.activeIn(week) }
 
     private fun getOrCreateCalendarId(context: Context): Long {
         val resolver = context.contentResolver

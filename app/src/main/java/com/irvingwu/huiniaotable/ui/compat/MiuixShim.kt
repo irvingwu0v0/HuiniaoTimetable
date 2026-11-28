@@ -51,6 +51,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold as MiuixScaffold
 import top.yukonga.miuix.kmp.basic.SnackbarHost as MiuixSnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState as MiuixSnackbarHostState
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
+import top.yukonga.miuix.kmp.basic.TextButton as MiuixTextButton
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme as MiuixThemeImpl
 import top.yukonga.miuix.kmp.theme.TextStyles as MiuixTextStyles
@@ -364,12 +365,7 @@ fun TextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    CompositionLocalProvider(LocalContentColor provides AppTheme.colorScheme.primary) {
-        Row(
-            modifier = modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) { MiuixText(text = text) }
-    }
+    MiuixTextButton(text = text, onClick = onClick, modifier = modifier, enabled = enabled)
 }
 
 @Composable
@@ -405,15 +401,8 @@ fun TextButton(
     contentPadding: Any? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
-    CompositionLocalProvider(LocalContentColor provides AppTheme.colorScheme.primary) {
-        Row(
-            modifier = modifier
-                .clip(shape)
-                .clickable(enabled = enabled, onClick = onClick)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content,
-        )
+    MiuixButton(onClick = onClick, modifier = modifier, enabled = enabled) {
+        CompositionLocalProvider(LocalContentColor provides MiuixThemeImpl.colorScheme.onSecondaryVariant) { content() }
     }
 }
 
@@ -472,13 +461,9 @@ fun AlertDialog(
     tonalElevation: Dp = 0.dp,
     properties: androidx.compose.ui.window.DialogProperties = androidx.compose.ui.window.DialogProperties(),
 ) {
-    androidx.compose.ui.window.Dialog(onDismissRequest = onDismissRequest, properties = properties) {
+    top.yukonga.miuix.kmp.window.WindowDialog(show = true, onDismissRequest = onDismissRequest) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(if (containerColor == Color.Unspecified) AppTheme.colorScheme.surface else containerColor)
-                .padding(24.dp),
+            modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             icon?.invoke()
@@ -522,32 +507,15 @@ fun OutlinedTextField(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         label?.invoke()
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(AppTheme.colorScheme.surfaceContainerLow)
-                .border(1.dp, AppTheme.colorScheme.outlineVariant, shape)
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            leadingIcon?.invoke()
-            androidx.compose.foundation.text.BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.weight(1f),
-                enabled = enabled && !readOnly,
-                singleLine = singleLine,
-                minLines = minLines,
-                maxLines = maxLines,
-                visualTransformation = visualTransformation,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
-                textStyle = textStyle.copy(color = if (textStyle.color == Color.Unspecified) AppTheme.colorScheme.onSurface else textStyle.color),
-            ) {
-                if (value.isEmpty()) placeholder?.invoke() else it()
-            }
-            trailingIcon?.invoke()
+        Box(contentAlignment = Alignment.CenterStart) {
+            top.yukonga.miuix.kmp.basic.TextField(
+                value = value, onValueChange = onValueChange, modifier = Modifier.fillMaxWidth(),
+                enabled = enabled, readOnly = readOnly, singleLine = singleLine,
+                minLines = minLines, maxLines = maxLines, visualTransformation = visualTransformation,
+                keyboardOptions = keyboardOptions, keyboardActions = keyboardActions, textStyle = textStyle,
+                leadingIcon = leadingIcon, trailingIcon = trailingIcon,
+            )
+            if (value.isEmpty() && placeholder != null) Box(Modifier.padding(horizontal = 16.dp)) { placeholder() }
         }
         supportingText?.invoke()
     }

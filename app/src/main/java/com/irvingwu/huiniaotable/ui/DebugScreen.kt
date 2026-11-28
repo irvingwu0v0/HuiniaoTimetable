@@ -4,6 +4,8 @@ import com.irvingwu.huiniaotable.ui.icons.AppIcons
 
 import android.Manifest
 import android.os.Build
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -85,10 +87,12 @@ fun DebugScreen(
         }
     }
 
+    val scrollBehavior = MiuixScrollBehavior()
     MiuixScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             MiuixTopAppBar(
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     MiuixIconButton(onClick = onBack) {
                         MiuixIcon(
@@ -104,7 +108,8 @@ fun DebugScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {

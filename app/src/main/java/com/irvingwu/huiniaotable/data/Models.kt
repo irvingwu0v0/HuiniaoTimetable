@@ -48,17 +48,11 @@ enum class WeekendMode {
         }
 }
 
-/** 课表网格里的一行（一个「大节」）。 */
+/** 教务表格的节次范围，导入后按单节存储。 */
 data class SlotRow(val label: String, val startSlot: Int, val endSlot: Int) {
     companion object {
-        /** 解析失败时的兜底行，覆盖常见 1-10 节。 */
-        val DEFAULT = listOf(
-            SlotRow(t("第1-2节", "Periods 1–2"), 1, 2),
-            SlotRow(t("第3-4节", "Periods 3–4"), 3, 4),
-            SlotRow(t("第5-6节", "Periods 5–6"), 5, 6),
-            SlotRow(t("第7-8节", "Periods 7–8"), 7, 8),
-            SlotRow(t("第9-10节", "Periods 9–10"), 9, 10),
-        )
+        val DEFAULT = (1..10).map { SlotRow(it.toString(), it, it) }
+        internal val legacyRows = (1..10 step 2).map { SlotRow("$it-${it + 1}", it, it + 1) }
     }
 }
 
@@ -77,7 +71,7 @@ data class Course(
     val endSlot: Int = 2,
     val weeks: List<Int> = emptyList(),
     /** 该课程落在课表的第几行（对应 [Schedule.slotRows] 的下标）。 */
-    val rowIndex: Int = 0,
+    val rowIndex: Int = startSlot - 1,
 ) {
     val key: String
         get() = listOf(
@@ -213,7 +207,7 @@ data class Schedule(
                 termLabel = o.optString("termLabel"),
                 courses = o.optJSONArray("courses").toObjectList { Course.fromJson(it) },
                 unscheduled = o.optJSONArray("unscheduled").toObjectList { UnscheduledCourse.fromJson(it) },
-                slotRows = rows.ifEmpty { SlotRow.DEFAULT },
+                slotRows = rows.ifEmpty { SlotRow.legacyRows },
                 maxWeek = o.optInt("maxWeek", 20),
                 lastTeachingWeek = o.optInt("lastTeachingWeek", o.optInt("maxWeek", 20)),
                 fetchedAt = o.optLong("fetchedAt", 0L),

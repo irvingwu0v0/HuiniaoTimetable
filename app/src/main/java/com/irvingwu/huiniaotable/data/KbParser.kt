@@ -45,14 +45,6 @@ object KbParser {
     data class Parsed(val schedule: Schedule, val terms: List<Term>)
 
     private val BR = Regex("<br\\s*/?>", RegexOption.IGNORE_CASE)
-    private val RANGE = Regex("^(\\d+)\\s*[-–~～至]\\s*(\\d+)$")
-    private val SLOT_RANGE = Regex("\\[(\\d+)\\s*[-–]\\s*(\\d+)节\\]")
-    private val SLOT_SINGLE = Regex("\\[(\\d+)节\\]")
-    private val SLOT_LOOSE = Regex("(\\d+)\\s*[-–~]\\s*(\\d+)\\s*节")
-    private val SLOT_LOOSE_SINGLE = Regex("第\\s*(\\d+)\\s*节")
-    private val ROW_SLOTS = Regex("第\\s*(\\d+)\\s*[-–~]\\s*(\\d+)\\s*节")
-    private val ROW_SLOTS_COMMA = Regex("第?\\s*(\\d+)\\s*[,，、]\\s*(\\d+)\\s*节")
-    private val ROW_SLOT_SINGLE = Regex("第\\s*(\\d+)\\s*节")
     private val ROW_BIG = Regex("第?\\s*([一二三四五六七八九十]+)\\s*大节")
     private val DAY = Regex("(?:星期|周)([一二三四五六日天])")
     private val WEEK_LINE = Regex("\\d")
@@ -82,66 +74,14 @@ object KbParser {
         val terms = parseTerms(doc)
         val selectedTerm = terms.firstOrNull { it.selected } ?: terms.firstOrNull()
 
-        val table = pickTable(doc)
-            ?: throw ParseException(t("页面里没有找到课表表格", "No timetable table was found on the page"))
-
-        val trs = table.select("tr")
-        if (trs.isEmpty()) throw ParseException(t("课表表格是空的", "The timetable table is empty"))
-
-        val headerRow = trs.firstOrNull { it.text().contains("星期") || it.text().contains("周一") }
-            ?: trs.firstOrNull()
-            ?: throw ParseException(t("课表表格是空的", "The timetable table is empty"))
-        val colToDay = buildDayColumns(headerRow)
-
-        data class RowInfo(val tr: Element, val row: SlotRow)
-
-        val rows = mutableListOf<RowInfo>()
-        for (tr in trs) {
-            val cells = tr.children().filter { it.tagName() == "th" || it.tagName() == "td" }
-            if (cells.isEmpty()) continue
-            val slots = parseRowSlots(cells.first().text()) ?: continue
-            rows += RowInfo(
-                tr,
-                SlotRow(
-                    cells.first().text().trim().ifBlank {
-                        t("第${slots.first}-${slots.second}节", "Periods ${slots.first}–${slots.second}")
-                    },
-                    slots.first,
-                    slots.second,
-                ),
-            )
+        val tables = doc.select("table").sortedByDescending { it.id().lowercase() in setOf("kbtable", "table1", "timetable") }
+        val (slotRows, courses) = tables.firstNotNullOfOrNull { element ->
+            val table = AcademicTable(element)
+            parseList(table) ?: parseGrid(table, family) ?: parseAcross(table, family)
         }
-
-        val courses = mutableListOf<Course>()
-        rows.forEachIndexed { rowIndex, info ->
-            val cells = info.tr.children().filter { it.tagName() == "th" || it.tagName() == "td" }
-            val head = cells.firstOrNull() ?: return@forEachIndexed
-            var column = 0
-            for (cell in cells) {
-                val colspan = cell.attr("colspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
-                if (cell !== head) {
-                    val day = colToDay.getOrElse(column) { 0 }
-                    if (day in 1..7) {
-                        // 部分教务系统用 rowspan 表示跨大节的连堂课，这里把节次范围一并扩到末行。
-                        val rowspan = cell.attr("rowspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
-                        val endSlot = rows.getOrNull(rowIndex + rowspan - 1)?.row?.endSlot ?: info.row.endSlot
-                        courses += coursesInCell(cell, day, rowIndex, info.row.startSlot, endSlot, family)
-                    }
-                }
-                column += colspan
-            }
-        }
+            ?: throw ParseException(t("没有识别到课程，请打开学期课表，或导入带星期和节次的 HTML / XLSX 表格。", "No classes found. Open the semester timetable or import an HTML / XLSX table with weekdays and periods."))
 
         val unscheduled = parseUnscheduled(doc)
-        if (courses.isEmpty() && unscheduled.isEmpty() && !html.contains("kbcontent")) {
-            throw ParseException(
-                t(
-                    "课表页面结构无法识别（可能是登录状态失效或页面已改版）",
-                    "The timetable page could not be parsed. Your session may have expired or the page changed.",
-                ),
-            )
-        }
-
         val merged = coalesce(courses)
         val (maxWeek, lastTeachingWeek) = weekRange(doc, merged)
         val schedule = Schedule(
@@ -149,71 +89,110 @@ object KbParser {
             termLabel = selectedTerm?.label ?: fallbackTerm,
             courses = merged,
             unscheduled = unscheduled,
-            slotRows = rows.map { it.row }.ifEmpty { SlotRow.DEFAULT },
+            slotRows = slotRows,
             maxWeek = maxWeek,
             lastTeachingWeek = lastTeachingWeek,
             fetchedAt = System.currentTimeMillis(),
         )
-        return Parsed(schedule, terms)
+        return Parsed(schedule.byPeriod(), terms)
     }
 
-    /** 课表表格：按常见 id / class 依次尝试，只接受含「星期」字样的表格。 */
-    private fun pickTable(doc: Document): Element? {
-        val selectors = listOf(
-            "table#timetable",
-            "table#kbtable",
-            "table#Table1",
-            "table#table1",
-            "table.kb",
-            "table.timetable",
-            "table",
-        )
-        for (selector in selectors) {
-            val found = doc.select(selector).firstOrNull { table ->
-                val text = table.text()
-                (text.contains("星期") || text.contains("周一")) && table.select("tr").size > 1
+    private fun parseGrid(table: AcademicTable, family: SchoolFamily): Pair<List<SlotRow>, List<Course>>? {
+        val header = table.rows.indexOfFirst { row -> row.values.any { dayOf(it.text()) != 0 } }
+        if (header < 0) return null
+        val days = table.rows[header].mapValues { dayOf(it.value.text()) }.filterValues { it != 0 }
+        val firstDay = days.keys.min()
+        val periods = table.rows.drop(header + 1).mapNotNull { cells ->
+            val (label, slots) = cells.filterKeys { it < firstDay }.values.firstNotNullOfOrNull { cell ->
+                parseRowSlots(cell.text())?.let { cell.text().trim() to it }
             }
-            if (found != null) return found
+                ?: return@mapNotNull null
+            SlotRow(label, slots.first, slots.second) to cells
         }
-        return null
+        val courses = buildList {
+            periods.forEachIndexed { index, (row, cells) ->
+                for ((column, day) in days) {
+                    val cell = cells[column] ?: continue
+                    if (periods.getOrNull(index - 1)?.second?.get(column) === cell) continue
+                    if (cell.selectFirst("table") != null || cell.attr("colspan").let { (it.toIntOrNull() ?: 1) > 1 }) continue
+                    var last = index
+                    while (periods.getOrNull(last + 1)?.second?.get(column) === cell) last++
+                    addAll(coursesInCell(cell, day, index, row.startSlot, periods[last].first.endSlot, family))
+                }
+            }
+        }
+        return if (courses.isEmpty()) null else periods.map { it.first } to courses
     }
 
-    /** 表头「星期一…星期日」占用的列号。返回下标 = 列号，值 = 星期几（0 表示不是星期列）。 */
-    private fun buildDayColumns(headerRow: Element): List<Int> {
-        val out = mutableListOf<Int>()
-        for (cell in headerRow.children()) {
-            val span = cell.attr("colspan").toIntOrNull()?.coerceAtLeast(1) ?: 1
-            val day = dayOf(cell.text())
-            repeat(span) { out += (if (it == 0) day else 0) }
+    private fun parseAcross(table: AcademicTable, family: SchoolFamily): Pair<List<SlotRow>, List<Course>>? {
+        val header = table.rows.indexOfFirst { row -> row.values.count { parseRowSlots(it.text()) != null } >= 2 }
+        if (header < 0) return null
+        val columns = table.rows[header].mapNotNull { (column, cell) -> parseRowSlots(cell.text())?.let { column to it } }.toMap()
+        val courses = buildList {
+            for (row in table.rows.drop(header + 1)) {
+                val day = row.filterKeys { it < columns.keys.min() }.values.map { dayOf(it.text()) }.firstOrNull { it != 0 } ?: continue
+                for ((column, slots) in columns) {
+                    val cell = row[column] ?: continue
+                    if (row[column - 1] === cell || cell.selectFirst("table") != null) continue
+                    val last = columns.keys.last { row[it] === cell }
+                    addAll(coursesInCell(cell, day, slots.first - 1, slots.first, columns.getValue(last).second, family))
+                }
+            }
         }
-        return out
+        if (courses.isEmpty()) return null
+        return (1..columns.values.maxOf { it.second }).map { SlotRow(it.toString(), it, it) } to courses
     }
 
-    private fun dayOf(text: String): Int = when (DAY.find(text.replace(" ", ""))?.groupValues?.get(1)) {
+    private fun parseList(table: AcademicTable): Pair<List<SlotRow>, List<Course>>? {
+        val header = table.rows.indexOfFirst { row -> row.values.any { it.text() in setOf("课程名称", "课程名") } }
+        if (header < 0) return null
+        val columns = table.rows[header].map { it.value.text().trim() to it.key }.toMap()
+        fun column(vararg labels: String) = labels.firstNotNullOfOrNull { columns[it] }
+        val name = column("课程名称", "课程名") ?: return null
+        val weekday = column("星期", "星期几", "上课星期") ?: return null
+        val period = column("节次", "上课节次", "起始节次", "开始节次") ?: return null
+        val lastPeriod = column("结束节次", "终止节次")
+        val weeks = column("周次", "上课周次", "教学周")
+        val teacher = column("授课教师", "任课教师", "教师", "上课教师")
+        val room = column("上课地点", "教室", "上课教室", "地点")
+        val courses = table.rows.drop(header + 1).flatMap { row ->
+            fun text(index: Int?) = index?.let { row[it]?.text()?.trim()?.ifBlank { null } }
+            val title = text(name) ?: return@flatMap emptyList()
+            val day = text(weekday)?.let { it.toIntOrNull() ?: dayOf(it) } ?: return@flatMap emptyList()
+            val rawPeriod = text(period) ?: return@flatMap emptyList()
+            if (day !in 1..7) return@flatMap emptyList()
+            val periods = text(lastPeriod)?.let { "$rawPeriod-$it" } ?: rawPeriod
+            periods.split(',', '，', '、').mapNotNull { part ->
+                val slots = parseRowSlots(part) ?: return@mapNotNull null
+                Course(title, teacher = TeacherNames.clean(text(teacher)), room = text(room), dayOfWeek = day,
+                    startSlot = slots.first, endSlot = slots.second, weeks = parseWeeks(text(weeks).orEmpty()), rowIndex = slots.first - 1)
+            }
+        }
+        val last = courses.maxOfOrNull { it.endSlot } ?: return null
+        return (1..last).map { SlotRow(it.toString(), it, it) } to courses
+    }
+
+    private fun dayOf(text: String): Int = when (DAY.find(text.replace(" ", ""))?.groupValues?.get(1) ?: text.trim()) {
         "一" -> 1; "二" -> 2; "三" -> 3; "四" -> 4; "五" -> 5; "六" -> 6; "日", "天" -> 7; else -> 0
     }
 
+    private val periodLabel = Regex("第?(\\d{1,2})(?:[-–~～至,，、](\\d{1,2}))?节?")
+    private val chinesePeriod = Regex("第?([一二三四五六七八九十]+)节")
+
     private fun parseRowSlots(text: String): Pair<Int, Int>? {
-        val clean = text.replace(" ", "").replace("\u00a0", "")
-        ROW_SLOTS.find(clean)?.let {
-            return it.groupValues[1].toIntOrNull()?.let { a ->
-                it.groupValues[2].toIntOrNull()?.let { b -> a to b }
-            }
+        val clean = text.filterNot { it.isWhitespace() }
+        ROW_BIG.matchEntire(clean)?.let {
+            val number = chineseNumber(it.groupValues[1]) ?: return null
+            return (number * 2 - 1) to number * 2
         }
-        ROW_SLOTS_COMMA.find(clean)?.let {
-            return it.groupValues[1].toIntOrNull()?.let { a ->
-                it.groupValues[2].toIntOrNull()?.let { b -> a to b }
-            }
+        chinesePeriod.matchEntire(clean)?.let {
+            val number = chineseNumber(it.groupValues[1]) ?: return null
+            return number to number
         }
-        ROW_SLOT_SINGLE.find(clean)?.let {
-            val a = it.groupValues[1].toIntOrNull() ?: return null
-            return a to a
-        }
-        ROW_BIG.find(clean)?.let {
-            val n = chineseNumber(it.groupValues[1]) ?: return null
-            return (n - 1) * 2 + 1 to n * 2
-        }
-        return null
+        val match = periodLabel.matchEntire(clean) ?: return null
+        val start = match.groupValues[1].toInt()
+        val end = match.groupValues[2].toIntOrNull() ?: start
+        return (start to end).takeIf { start in 1..30 && end in start..30 }
     }
 
     private fun chineseNumber(raw: String): Int? = when (raw) {
@@ -234,6 +213,15 @@ object KbParser {
             val parsed = qiangzhiCoursesInCell(cell, day, rowIndex, rowStart, rowEnd)
             if (parsed.isNotEmpty()) return parsed
         }
+        val structured = cell.select(".timetable_con").mapNotNull { block ->
+            val name = block.selectFirst(".title")?.text()?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            fun field(title: String) = block.selectFirst("[title*=$title]")?.parent()?.selectFirst(".timetable-content")?.text()
+            val time = field("节/周") ?: field("周次").orEmpty()
+            val slots = parseSlots(time) ?: (rowStart to rowEnd)
+            Course(name, teacher = TeacherNames.clean(field("教师")), room = field("地点") ?: field("教室"),
+                dayOfWeek = day, startSlot = slots.first, endSlot = slots.second, weeks = parseWeeks(time), rowIndex = rowIndex)
+        }
+        if (structured.isNotEmpty()) return structured
         return cellBlocks(cell).mapNotNull { block ->
             parseGenericBlock(block, day, rowIndex, rowStart, rowEnd)
         }
@@ -277,7 +265,7 @@ object KbParser {
             val weeks = parseWeeks(summaryWeekText).ifEmpty { parseWeeks(detailWeekText) }
             val slots = parseSlots(detailWeekText.ifBlank { summaryWeekText }) ?: (rowStart to rowEnd)
 
-            val teacher = TeacherNames.clean(detail?.selectFirst("font[title*=教师]")?.text())
+            val teacher = TeacherNames.clean((detail ?: summary).selectFirst("font[title*=教师]")?.text())
             val room = (detail?.selectFirst("font[title*=教室]") ?: summary.selectFirst("font[title*=教室]"))
                 ?.text()?.trim()?.takeIf { it.isNotBlank() }
             val campus = detail?.selectFirst("font[title*=教学楼]")?.text()?.trim()
@@ -317,7 +305,7 @@ object KbParser {
         rowStart: Int,
         rowEnd: Int,
     ): Course? {
-        val lines = block.html().split(BR)
+        val lines = block.html().replace(Regex("(?i)</(?:div|p|li)>"), "<br>").split(BR)
             .map { Jsoup.parse(it).text().replace("\u00a0", " ").trim() }
             .filter { it.isNotEmpty() }
         if (lines.isEmpty()) return null
@@ -337,7 +325,11 @@ object KbParser {
         var room: String? = null
         var campus: String? = null
         for (line in rest.drop(1)) {
+            val label = line.substringBefore('：').substringBefore(':')
+            val value = line.removePrefix(label).trimStart('：', ':', ' ')
             when {
+                value.isNotEmpty() && label in setOf("教师", "任课教师", "授课教师") -> teacher = TeacherNames.clean(value)
+                value.isNotEmpty() && label in setOf("地点", "上课地点", "教室") -> room = value
                 classLabel == null && CLASS_LABEL.matches(line) -> classLabel = line.cleanClassLabel()
                 teacher == null && TEACHER_LINE.matches(line) -> teacher = TeacherNames.clean(line)
                 room == null && ROOM_HINT.containsMatchIn(line) -> room = line.trim('[', ']', '【', '】')
@@ -436,53 +428,31 @@ object KbParser {
      */
     fun parseWeeks(raw: String): List<Int> {
         if (raw.isBlank()) return emptyList()
-        val odd = raw.contains("单")
-        val even = raw.contains("双")
-        var text = raw.substringBefore('[').substringBefore('【')
-        text = text.replace(Regex("[（(][^）)]*[）)]"), " ")
-        text = text.replace("周", " ")
-        val weeks = sortedSetOf<Int>()
-        for (token in text.split(',', '，', '、', ';', '；', ' ', '\t', '\n')) {
-            val part = token.trim()
-            if (part.isEmpty()) continue
-            val range = RANGE.find(part)
-            if (range != null) {
-                val a = range.groupValues[1].toIntOrNull() ?: continue
-                val b = range.groupValues[2].toIntOrNull() ?: continue
-                if (a <= b) for (i in a..b) weeks.add(i) else for (i in b..a) weeks.add(i)
-            } else {
-                val digits = part.filter { it.isDigit() }
-                if (digits.isNotEmpty() && digits.length <= 3) digits.toIntOrNull()?.let { weeks.add(it) }
+        val text = raw.replace(Regex("[（(\\[【]?第?\\s*\\d+(?:\\s*[-–~,，]\\s*\\d+)*\\s*节[）)\\]】]?"), " ")
+            .replace(Regex("(?:星期|周)[一二三四五六日天]"), " ")
+        val groups = Regex("(\\d{1,2}(?:\\s*[-–~～至]\\s*\\d{1,2})?(?:\\s*[,，、]\\s*\\d{1,2}(?:\\s*[-–~～至]\\s*\\d{1,2})?)*)\\s*(?:[(（]?周[)）]?)?\\s*[(（]?([单双])?")
+        return buildSet {
+            for (group in groups.findAll(text)) {
+                for (part in group.groupValues[1].split(',', '，', '、')) {
+                    val bounds = part.split(Regex("[-–~～至]")).map { it.trim().toInt() }
+                    for (week in minOf(bounds.first(), bounds.last())..maxOf(bounds.first(), bounds.last())) {
+                        if (week in 1..40 && when (group.groupValues[2]) {
+                            "单" -> week % 2 == 1
+                            "双" -> week % 2 == 0
+                            else -> true
+                        }) add(week)
+                    }
+                }
             }
-        }
-        val list = weeks.toList()
-        return when {
-            odd && !even -> list.filter { it % 2 == 1 }
-            even && !odd -> list.filter { it % 2 == 0 }
-            else -> list
-        }
+        }.sorted()
     }
 
-    private fun parseSlots(raw: String): Pair<Int, Int>? {
-        SLOT_RANGE.find(raw)?.let {
-            val a = it.groupValues[1].toIntOrNull() ?: return@let
-            val b = it.groupValues[2].toIntOrNull() ?: return@let
-            return a to b
-        }
-        SLOT_SINGLE.find(raw)?.let {
-            val a = it.groupValues[1].toIntOrNull() ?: return@let
-            return a to a
-        }
-        SLOT_LOOSE.find(raw)?.let {
-            val a = it.groupValues[1].toIntOrNull() ?: return@let
-            val b = it.groupValues[2].toIntOrNull() ?: return@let
-            return a to b
-        }
-        SLOT_LOOSE_SINGLE.find(raw)?.let {
-            val a = it.groupValues[1].toIntOrNull() ?: return@let
-            return a to a
-        }
-        return null
+    private val inlinePeriod = Regex("第?\\s*(\\d{1,2})(?:\\s*[-–~～,，、]\\s*(\\d{1,2}))?\\s*节")
+
+    private fun parseSlots(raw: String): Pair<Int, Int>? = inlinePeriod.find(raw)?.let {
+        val start = it.groupValues[1].toInt()
+        val end = it.groupValues[2].toIntOrNull() ?: start
+        (start to end).takeIf { start in 1..30 && end in start..30 }
     }
 
     /**

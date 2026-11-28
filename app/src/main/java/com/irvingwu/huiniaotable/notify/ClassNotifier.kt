@@ -242,11 +242,7 @@ object ClassNotifier {
     }
 
     private fun occurrencesFor(state: AppState, date: LocalDate): List<Occurrence> {
-        val schedule = state.schedule ?: return emptyList()
-        if (state.needsTermStart || state.isOffDay(date)) return emptyList()
-        val week = state.currentWeek
-        val day = state.displayDayOfWeek(date, week)
-        return schedule.coursesOnDay(day, week)
+        return state.classesOnDate(date)
             .mapNotNull { course ->
                 val range = parseRange(state.timeTextFor(course)) ?: return@mapNotNull null
                 Occurrence(

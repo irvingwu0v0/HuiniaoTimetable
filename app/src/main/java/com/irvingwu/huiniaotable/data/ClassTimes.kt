@@ -115,8 +115,8 @@ object ClassTimes {
     /** 节次区间的上课时间，例如第 1-2 节 -> 08:00-09:40。 */
     fun timeTextFor(startSlot: Int, endSlot: Int, building: CampusBuilding): String {
         val table = periods(building)
-        val start = table.getOrNull((startSlot - 1).coerceIn(0, table.size - 1))?.start ?: return ""
-        val end = table.getOrNull((endSlot - 1).coerceIn(0, table.size - 1))?.end ?: return start
+        val start = table.getOrNull(startSlot - 1)?.start ?: return ""
+        val end = table.getOrNull(endSlot - 1)?.end ?: return ""
         return "$start-$end"
     }
 

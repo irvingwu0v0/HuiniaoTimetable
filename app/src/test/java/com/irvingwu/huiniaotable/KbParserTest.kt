@@ -48,7 +48,7 @@ class KbParserTest {
     @Test
     fun `解析大节行`() {
         assertEquals(
-            listOf("第1-2节" to (1 to 2), "第3-4节" to (3 to 4)),
+            (1..4).map { it.toString() to (it to it) },
             parsed.schedule.slotRows.map { it.label to (it.startSlot to it.endSlot) },
         )
     }
@@ -74,7 +74,7 @@ class KbParserTest {
         val cs = parsed.schedule.courses.first { it.name == "计算机导论" }
         assertEquals(3, cs.startSlot)
         assertEquals(4, cs.endSlot)
-        assertEquals(1, cs.rowIndex)
+        assertEquals(2, cs.rowIndex)
         assertEquals((2..18 step 2).toList(), cs.weeks)
         assertEquals("钱老师", cs.teacher)
     }
@@ -109,7 +109,7 @@ class KbParserTest {
 
     @Test
     fun `备注行不会被当成课表格子`() {
-        assertEquals(2, parsed.schedule.slotRows.size)
+        assertEquals(4, parsed.schedule.slotRows.size)
         assertTrue(parsed.schedule.courses.none { it.name.contains("教材") })
     }
 

@@ -112,6 +112,10 @@ class Prefs(context: Context) {
         get() = sp.getString(KEY_COURSE_PLACEMENTS, null)
         set(value) = sp.edit().putString(KEY_COURSE_PLACEMENTS, value).apply()
 
+    fun savePeriodAxis(schedule: Schedule, placements: String) {
+        sp.edit().putString(KEY_SCHEDULE, schedule.toJson().toString()).putString(KEY_COURSE_PLACEMENTS, placements).apply()
+    }
+
     /** 清除已导入的课表缓存；历史版本遗留的账号/密码字段也一并清理。 */
     fun clearSchedule() {
         sp.edit()

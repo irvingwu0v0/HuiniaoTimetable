@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  桌面控件的系统动态配色（浅色）。
-  直接引用系统的动态取色语义色，随壁纸 / 主题自动变化，和 App 内的
-  系统动态取色保持一致。
+  桌面控件配色（浅色）。
+  API 34+ 通过 values-v34 使用系统动态取色；较低版本回退到固定配色，
+  避免引用不存在的系统资源。
 -->
 <resources>
     <!-- 控件卡片背景 -->
-    <color name="widget_background">@android:color/system_surface_container_high_light</color>
+    <color name="widget_background">#FFF3F5F8</color>
     <!-- 尚未开始的课程：常规前景色 -->
-    <color name="widget_foreground">@android:color/system_on_surface_light</color>
+    <color name="widget_foreground">#FF1A1C1E</color>
     <!-- 已结束的课程 / 次要信息：弱化灰 -->
-    <color name="widget_muted">@android:color/system_on_surface_variant_light</color>
+    <color name="widget_muted">#FF5D6168</color>
     <!-- 正在上课 / 接下来一节：强调色 -->
-    <color name="widget_accent">@android:color/system_primary_light</color>
+    <color name="widget_accent">#FF1A6FA3</color>
     <!-- 分隔线 -->
-    <color name="widget_divider">@android:color/system_outline_variant_light</color>
+    <color name="widget_divider">#FFDDE1E7</color>
 </resources>

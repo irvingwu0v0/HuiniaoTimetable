@@ -4,9 +4,14 @@ import com.irvingwu.huiniaotable.ui.compat.Surface
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.runtime.mutableStateOf
+import com.irvingwu.huiniaotable.ui.CourseDetailSheet
+import androidx.compose.ui.test.performClick
+import com.irvingwu.huiniaotable.data.byPeriod
 import com.irvingwu.huiniaotable.data.AppState
 import com.irvingwu.huiniaotable.data.Campus
 import com.irvingwu.huiniaotable.data.Course
@@ -67,7 +72,7 @@ class ScreensSmokeTest {
         maxWeek = 20,
         lastTeachingWeek = 18,
         fetchedAt = System.currentTimeMillis(),
-    )
+    ).byPeriod()
 
     private fun stateWith(
         holidays: HolidayYear? = null,
@@ -88,6 +93,7 @@ class ScreensSmokeTest {
 
     @Test
     fun 课表页显示节次时间与课程() {
+        val detail = mutableStateOf<Course?>(null)
         compose.setContent {
             HuiniaoTimetableTheme(dynamicColor = false) {
                 Surface {
@@ -97,19 +103,35 @@ class ScreensSmokeTest {
                         onSelectWeek = {},
                         onToday = {},
                         onSetTermStart = {},
-                        onCourseClick = {},
+                        onCourseClick = { detail.value = it },
                     )
+                    CourseDetailSheet(detail.value, stateWith(), onDismiss = { detail.value = null })
                 }
             }
         }
-        compose.onNodeWithText("1-2").assertIsDisplayed()
+        compose.onNodeWithText("1").assertIsDisplayed()
+        compose.onNodeWithText("2").assertIsDisplayed()
+        compose.onNodeWithText("1-2").assertDoesNotExist()
         compose.onNodeWithText("08:00").assertIsDisplayed()
         compose.onNodeWithText("高等数学(理科上册)").assertIsDisplayed()
         compose.onNodeWithText("第一教学楼 101").assertIsDisplayed()
-        // 课程方块里除了教室，还要显示授课教师
+        compose.onNodeWithText("张老师").assertDoesNotExist()
+        compose.onNodeWithText("高等数学(理科上册)").performClick()
         compose.onNodeWithText("张老师").assertIsDisplayed()
-        // 结束时间
-        compose.onNodeWithText("09:40").assertIsDisplayed()
+
+    }
+
+    @Test
+    fun 空课表显示原应用图标和导入入口() {
+        var imports = 0
+        compose.setContent {
+            HuiniaoTimetableTheme(dynamicColor = false) {
+                ScheduleContent(stateWith().copy(schedule = null), { imports++ }, {}, {}, {}, {})
+            }
+        }
+        compose.onNodeWithContentDescription("应用图标").assertIsDisplayed()
+        compose.onNodeWithText("导入课表").performClick()
+        compose.runOnIdle { org.junit.Assert.assertEquals(1, imports) }
     }
 
     @Test
@@ -159,7 +181,6 @@ class ScreensSmokeTest {
             }
         }
         compose.onNodeWithText("六").assertIsDisplayed()
-        compose.onNodeWithText("班").assertIsDisplayed()
         compose.onNodeWithText("补周三").assertIsDisplayed()
     }
 
@@ -214,21 +235,10 @@ class ScreensSmokeTest {
                 Surface {
                     SettingsContent(
                         state = stateWith(),
-                        onRefresh = {},
                         onImport = {},
                         onSyncCalendar = {},
-                        onSelectTerm = {},
                         onSetTermStart = {},
-                        onSelectCampus = {},
-                        onSelectBuilding = {},
-                        onSelectBuildingScheme = { _, _ -> },
-                        onSelectWeekendMode = {},
                         onHideEvening = {},
-                        onRefreshHolidays = {},
-                        onAddHolidayOverride = { _, _, _ -> },
-                        onRemoveHolidayOverride = {},
-                        onSetMakeup = { _, _ -> },
-                        onClearMakeup = {},
                         onDynamicColor = {},
                         onClassNotify = {},
                         onOpenDebug = {},
@@ -237,13 +247,13 @@ class ScreensSmokeTest {
                 }
             }
         }
-        compose.onNodeWithText("教务系统网址").assertIsDisplayed()
-        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("学期开学首周基准日"))
-        compose.onNodeWithText("学期开学首周基准日").assertIsDisplayed()
-        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("作息方案与校区楼宇设置"))
-        compose.onNodeWithText("作息方案与校区楼宇设置").assertIsDisplayed()
-        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("节假日与调休编排"))
-        compose.onNodeWithText("节假日与调休编排").assertIsDisplayed()
+        compose.onNodeWithText("导入课表").assertIsDisplayed()
+        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("开学日期"))
+        compose.onNodeWithText("开学日期").assertIsDisplayed()
+        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("作息时间"))
+        compose.onNodeWithText("作息时间").assertIsDisplayed()
+        compose.onNodeWithTag("settings_list").performScrollToNode(hasText("节假日与调休"))
+        compose.onNodeWithText("节假日与调休").assertIsDisplayed()
     }
 
     @Test

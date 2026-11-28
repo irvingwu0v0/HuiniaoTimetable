@@ -2,8 +2,9 @@ package com.irvingwu.huiniaotable.ui
 
 import com.irvingwu.huiniaotable.ui.icons.AppIcons
 
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import com.irvingwu.huiniaotable.ui.compat.DropdownMenu
@@ -28,8 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.irvingwu.huiniaotable.ui.compat.AlertDialog
 import com.irvingwu.huiniaotable.ui.compat.Button
-import com.irvingwu.huiniaotable.ui.compat.Card
-import com.irvingwu.huiniaotable.ui.compat.CardDefaults
 import com.irvingwu.huiniaotable.ui.compat.FilledTonalButton
 import com.irvingwu.huiniaotable.ui.compat.FilterChip
 import com.irvingwu.huiniaotable.ui.compat.HorizontalDivider
@@ -38,7 +37,6 @@ import com.irvingwu.huiniaotable.ui.compat.IconButton
 import com.irvingwu.huiniaotable.ui.compat.AppTheme
 import com.irvingwu.huiniaotable.ui.compat.OutlinedButton
 import com.irvingwu.huiniaotable.ui.compat.OutlinedTextField
-import com.irvingwu.huiniaotable.ui.compat.Scaffold
 import com.irvingwu.huiniaotable.ui.compat.SegmentedButton
 import com.irvingwu.huiniaotable.ui.compat.SegmentedButtonDefaults
 import com.irvingwu.huiniaotable.ui.compat.SingleChoiceSegmentedButtonRow
@@ -52,8 +50,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -189,9 +185,11 @@ fun HolidaysScreen(
         )
     }
 
+    val scrollBehavior = MiuixScrollBehavior()
     MiuixScaffold(
         topBar = {
             MiuixTopAppBar(
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     MiuixIconButton(onClick = onBack) {
                         MiuixIcon(
@@ -200,21 +198,22 @@ fun HolidaysScreen(
                         )
                     }
                 },
-                title = t("节假日与调休编排", "Holidays and makeup days"),
+                title = t("节假日与调休", "Holidays & makeup days"),
             )
         },
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             // ---- 周末展示策略 ----
             item {
-                HolidaysCard {
-                    HolidaysSettingRow(
+                PreferenceGroup {
+                    PreferenceLine(
                         icon = AppIcons.ViewWeek,
                         title = t("周末列展示模式", "Weekend display"),
                         subtitle = when (state.weekendMode) {
@@ -250,11 +249,11 @@ fun HolidaysScreen(
 
             // ---- 法定节假日数据服务 ----
             item {
-                HolidaysCard {
+                PreferenceGroup {
                     var showRegionDropdown by remember { mutableStateOf(false) }
 
                     Box {
-                        HolidaysSettingRow(
+                        PreferenceLine(
                             icon = AppIcons.Place,
                             title = t("选择放假方案", "Holiday schedule"),
                             subtitle = state.holidayRegion.displayName,
@@ -318,7 +317,7 @@ fun HolidaysScreen(
                     var showSourceDropdown by remember { mutableStateOf(false) }
 
                     Box {
-                        HolidaysSettingRow(
+                        PreferenceLine(
                             icon = AppIcons.Dns,
                             title = t("数据同步源", "Data source"),
                             subtitle = when (state.holidaySource) {
@@ -396,28 +395,8 @@ fun HolidaysScreen(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = AppTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     )
-                    HolidaysSettingRow(
-                        icon = AppIcons.HolidayVillage,
-                        title = t("法定节假日数据状态", "Public holiday data"),
-                        subtitle = state.holidays?.let {
-                            t("已加载 ${it.days.size} 个公历节假日及调休节点", "${it.days.size} holiday and makeup days loaded")
-                        } ?: t("未加载法定假日数据", "No holiday data loaded"),
-                    )
-                    HolidaysSettingRow(
-                        icon = AppIcons.Sync,
-                        title = t("节假日数据更新时间", "Holiday data updated"),
-                        subtitle = formatTime(state.holidayFetchedAt),
-                    )
-                    FilledTonalButton(
-                        onClick = onRefreshHolidays,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                    ) {
-                        Icon(imageVector = AppIcons.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(t("同步最新法定放假及调休安排", "Sync latest holidays and makeup days"))
-                    }
+                    PreferenceLine(icon = AppIcons.Sync, title = t("同步节假日", "Sync holidays"),
+                        subtitle = formatTime(state.holidayFetchedAt), onClick = onRefreshHolidays)
                 }
             }
 
@@ -425,7 +404,7 @@ fun HolidaysScreen(
             if (festivalSchedules.isNotEmpty()) {
                     festivalSchedules.forEach { festival ->
                     item(key = festival.name) {
-                        HolidaysCard {
+                        PreferenceGroup {
                             // 节日小标题与标签
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -500,7 +479,7 @@ fun HolidaysScreen(
                                     val currentTarget = state.makeupMap[day.date]
                                     val isOverridden = state.makeupOverrides.containsKey(day.date)
 
-                                    HolidaysSettingRow(
+                                    PreferenceLine(
                                         icon = AppIcons.EditCalendar,
                                         title = "${day.date.format(dateFormatter)} ($weekday)",
                                         subtitle = when (currentTarget) {
@@ -552,7 +531,7 @@ fun HolidaysScreen(
 
             // ---- 自定义节假日与特殊调休 ----
             item {
-                HolidaysCard {
+                PreferenceGroup {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -694,88 +673,6 @@ private fun CustomHolidayDialog(
             TextButton(onClick = onDismiss) { Text(t("取消", "Cancel")) }
         },
     )
-}
-
-@Composable
-private fun HolidaysSectionTitle(text: String) {
-    Text(
-        text = text,
-        style = AppTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = AppTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 10.dp, bottom = 2.dp),
-    )
-}
-
-@Composable
-private fun HolidaysCard(content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = AppTheme.colorScheme.surfaceContainerLow,
-        ),
-        shape = AppTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun HolidaysSettingRow(
-    icon: ImageVector? = null,
-    title: String,
-    subtitle: String? = null,
-    onClick: (() -> Unit)? = null,
-    trailing: (@Composable () -> Unit)? = null,
-) {
-    val rowModifier = Modifier
-        .fillMaxWidth()
-        .clip(AppTheme.shapes.small)
-        .then(
-            if (onClick != null) {
-                Modifier.clickable(onClick = onClick)
-            } else {
-                Modifier
-            },
-        )
-        .padding(vertical = 8.dp, horizontal = 2.dp)
-
-    Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = AppTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = AppTheme.typography.titleMedium.copy(
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            )
-            if (!subtitle.isNullOrBlank()) {
-                Text(
-                    text = subtitle,
-                    style = AppTheme.typography.bodySmall,
-                    color = AppTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        trailing?.invoke()
-    }
 }
 
 @Composable

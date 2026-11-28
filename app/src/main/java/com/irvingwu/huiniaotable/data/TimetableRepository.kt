@@ -277,6 +277,24 @@ data class AppState(
         return (0..6).map { monday.plusDays(it.toLong()) }
     }
 
+    internal fun classesOnDate(date: LocalDate): List<Course> {
+        val timetable = schedule ?: return emptyList()
+        val start = termStart ?: return emptyList()
+        val monday = start.minusDays((start.dayOfWeek.value - 1).toLong())
+        val days = ChronoUnit.DAYS.between(monday, date)
+        if (days < 0 || days >= maxWeek * 7L || isOffDay(date)) return emptyList()
+        val week = (days / 7).toInt() + 1
+        val day = displayDayOfWeek(date, week)
+        return timetable.courses.flatMap { course ->
+            positionsOf(course, week).distinct().mapNotNull { (weekday, row) ->
+                if (weekday != day) return@mapNotNull null
+                val first = timetable.slotRows.getOrNull(row)?.startSlot ?: return@mapNotNull null
+                course.copy(dayOfWeek = date.dayOfWeek.value, rowIndex = row, startSlot = first,
+                    endSlot = first + course.endSlot - course.startSlot)
+            }
+        }.sortedBy { it.startSlot }
+    }
+
     fun holidayOn(date: LocalDate): HolidayDay? = holidays?.dayOn(date)
 
     fun isOffDay(date: LocalDate): Boolean = holidays?.isOffDay(date) == true
@@ -302,7 +320,7 @@ data class AppState(
 
     /** 这一周里某个星期几是否有课。 */
     fun hasCoursesOn(dayOfWeek: Int, week: Int): Boolean =
-        schedule?.courses?.any { it.dayOfWeek == dayOfWeek && it.activeIn(week) } == true
+        schedule?.courses?.any { positionsOf(it, week).any { position -> position.first == dayOfWeek } } == true
 
     /**
      * 这一列实际按星期几的课显示。调休上班日优先按「补的那天」，
@@ -389,7 +407,12 @@ object TimetableRepository {
         prefsOrNull = prefs
 
         prefs.scheduleConfigJson?.let { ClassTimes.importJson(it) }
-        val saved = Schedule.parse(prefs.scheduleJson)
+        val cached = Schedule.parse(prefs.scheduleJson)
+        val saved = cached?.byPeriod()
+        if (saved != null && saved !== cached) {
+            val placements = cached.placementsByPeriod(parseCoursePlacements(prefs.coursePlacementsJson))
+            prefs.savePeriodAxis(saved, serializeCoursePlacements(placements))
+        }
 
         _state.value = AppState(
             jwxtBaseUrl = prefs.jwxtBaseUrl,
@@ -432,40 +455,27 @@ object TimetableRepository {
     }
 
 
-    fun importFromHtml(html: String, baseUrl: String, onResult: (Result<Unit>) -> Unit = {}) {
-        scope.launch {
-            try {
-                require(html.isNotBlank()) { tr("没有读取到页面内容", "No page content was captured") }
-                val parsed = KbParser.parse(html)
-                require(parsed.schedule.courses.isNotEmpty()) {
-                    tr("当前页面里没有识别到课程，请确认停留在课表页面", "No courses found. Make sure the timetable page is open.")
-                }
-                val schedule = parsed.schedule
-                prefs.scheduleJson = schedule.toJson().toString()
-                prefs.fetchedAt = schedule.fetchedAt
-                prefs.lastRefreshDay = LocalDate.now().toString()
-                prefs.term = schedule.term
-                if (baseUrl.isNotBlank()) prefs.jwxtBaseUrl = baseUrl
+    suspend fun saveImport(parsed: KbParser.Parsed, baseUrl: String) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val schedule = parsed.schedule
+        prefs.scheduleJson = schedule.toJson().toString()
+        prefs.fetchedAt = schedule.fetchedAt
+        prefs.lastRefreshDay = LocalDate.now().toString()
+        prefs.term = schedule.term
+        if (baseUrl.isNotBlank()) prefs.jwxtBaseUrl = baseUrl
 
-                _state.update { current ->
-                    current.copy(
-                        schedule = schedule,
-                        terms = parsed.terms.ifEmpty { current.terms },
-                        term = schedule.term.ifBlank { current.term },
-                        fetchedAt = schedule.fetchedAt,
-                        lastRefreshDay = prefs.lastRefreshDay,
-                        jwxtBaseUrl = prefs.jwxtBaseUrl,
-                        phase = Phase.Ready,
-                    )
-                }
-                recomputeWeeks()
-                pushMessage(tr("课表已导入", "Timetable imported"))
-                onResult(Result.success(Unit))
-            } catch (t: Throwable) {
-                pushMessage(tr("导入失败：${t.message ?: "无法解析页面"}", "Import failed: ${t.message ?: "could not parse page"}"))
-                onResult(Result.failure(t))
-            }
+        _state.update { current ->
+            current.copy(
+                schedule = schedule,
+                terms = parsed.terms,
+                term = schedule.term,
+                fetchedAt = schedule.fetchedAt,
+                lastRefreshDay = prefs.lastRefreshDay,
+                jwxtBaseUrl = prefs.jwxtBaseUrl,
+                phase = Phase.Ready,
+            )
         }
+        recomputeWeeks()
+        pushMessage(tr("课表已导入", "Timetable imported"))
     }
 
     /** 手动刷新调休数据。 */
